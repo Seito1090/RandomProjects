@@ -10,7 +10,7 @@ def create_random_graph(args):
 
     random.seed(args.seed)
 
-    nodes = dict()
+    nodes = {i: list() for i in range(nb_nodes)}
     for _ in range(nb_links):
         node_a = random.randint(0, nb_nodes - 1)
         node_b = random.randint(0, nb_nodes - 1)
@@ -27,16 +27,18 @@ def create_random_graph(args):
 def ntf_parse(args):
     with open(args.ntf) as fd:
         data = fd.read().split("\n")
-
-    mapping = dict()
-    nodes = dict()
+    
+    # Get the number of nodes by checking at the max index.
+    nb_nodes = 0
     for line in data:
         tab = line.split(" ")
-        node_a = tab[0]
-        node_b = tab[1]
+        nb_nodes = max([nb_nodes, int(tab[0]), int(tab[1])])
 
-        node_a = mapping.setdefault(node_a, len(mapping))
-        node_b = mapping.setdefault(node_b, len(mapping))
+    nodes = {i: list() for i in range(nb_nodes)}
+    for line in data:
+        tab = line.split(" ")
+        node_a = int(tab[0])
+        node_b = int(tab[1])
 
         c_ab = int(tab[2])
         nodes.setdefault(node_a, list()).append((node_b, c_ab))
@@ -71,10 +73,8 @@ def to_binary_file(nodes, nb_links, output):
         fd.write(nb_nodes.to_bytes(4, "big"))
         fd.write(nb_links.to_bytes(4, "big"))
 
-        print(nodes)
         for node in nodes:
             for j, cost in nodes[node]:
-                print(node, j, cost)
                 fd.write(node.to_bytes(4, "big"))
                 fd.write(j.to_bytes(4, "big"))
                 fd.write(cost.to_bytes(4, "big", signed=True))
