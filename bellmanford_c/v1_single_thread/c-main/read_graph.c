@@ -31,19 +31,19 @@ unsigned int** read_graph(char* file_name){
     return links;
 }
 
-int main(int argc,char** argv){
-    clock_t start, end;
-    double execution_time;
-    start = clock();
-    char* file_name = "graph.bin";
-    unsigned int** links = read_graph(file_name);
-    unsigned int nb_nodes = links[0][0];
-    unsigned int nb_edges = links[0][1];
-    for (int i = 0; i < nb_edges; i++){
-        printf("%u %u %u\n", links[i][0], links[i][1], links[i][2]);
-    }
-    end = clock();
-    execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
-    printf("Execution time: %f seconds \n", execution_time);
-    return 0;
-}
+// int main(int argc,char** argv){
+//     clock_t start, end;
+//     double execution_time;
+//     start = clock();
+//     char* file_name = "graph.bin";
+//     unsigned int** links = read_graph(file_name);
+//     unsigned int nb_nodes = links[0][0];
+//     unsigned int nb_edges = links[0][1];
+//     for (int i = 0; i < nb_edges; i++){
+//         printf("%u %u %u\n", links[i][0], links[i][1], links[i][2]);
+//     }
+//     end = clock();
+//     execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
+//     printf("Execution time: %f seconds \n", execution_time);
+//     return 0;
+// }

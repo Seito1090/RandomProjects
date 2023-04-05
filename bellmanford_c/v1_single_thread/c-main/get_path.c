@@ -35,37 +35,51 @@ int main(int argc,char** argv){
     clock_t start, end;
     double execution_time;
     start = clock();
+
     char* file_name = "graph.bin";
     unsigned int** links = read_graph(file_name);
     unsigned int nb_nodes = links[0][0];
     unsigned int nb_edges = links[0][1];
+
     char buf[1024];
     char output[1024];
+    char* out_ptr = output;
+    char* buf_ptr = buf;
+
     for (int source = 0; source < nb_nodes; source++){
-        int len = sprintf(buf, "Source : %d\nDistances : [ ", source);
-        float** result = belman_ford(nb_nodes, nb_edges, links, nb_edges, source, true);
+        int len = sprintf(buf_ptr, "Source : %d\nDistances : [ ", source);
+        buf_ptr += len;
+        float** result = belman_ford(nb_nodes, nb_edges, links, nb_edges, source, false);
         for (int i = 0; i < nb_nodes; i++) {
-            len += sprintf(&buf[len], "%d ", (int)result[0][i]);
+            len = sprintf(buf_ptr, "%d ", (int)result[0][i]);
+            buf_ptr += len;
         }
-        len += sprintf(&buf[len], "]\n");
+        len = sprintf(buf_ptr, "]\n");
+        buf_ptr += len;
         float* max = get_max(nb_nodes, result[0], source);
         int cost = (int)max[0];
         int node = (int)max[1];
         int* path = get_path(node, source, result[1], nb_nodes);
         int number_of_nodes = path[0];
-        snprintf(output, sizeof(output), "  Destination: %d\n  Cost: %d\n  Number of nodes in the path: %d\n  Path to take : [",
+        len = sprintf(out_ptr, "  Destination: %d\n  Cost: %d\n  Number of nodes in the path: %d\n  Path to take : [",
                 node, cost, number_of_nodes);
+        out_ptr += len;
         for (int i = 1; i < number_of_nodes+1; i++){
-            char buffer[32];
-            snprintf(buffer, sizeof(buffer), " %d", path[i]);
-            strncat(output, buffer, sizeof(output) - strlen(output) - 1);
+            len = sprintf(out_ptr, " %d", path[i]);
+            out_ptr += len;
         }
-        strncat(output, "]\n--------------------------------------------------\n", sizeof(output) - strlen(output) - 1);
-        printf("%s%s", buf, output);
+        len = sprintf(out_ptr, "]\n--------------------------------------------------\n");
+        out_ptr += len;
         free(result);
     }
+    // Print the output buffer all at once
+    printf("%s", buf);
+    printf("%s", output);
+
     end = clock();
     execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
     printf("Execution time : %f\n", execution_time);
+
     return 0;
+
 }
