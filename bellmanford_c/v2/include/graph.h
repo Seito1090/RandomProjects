@@ -44,11 +44,11 @@ ford_t* bellman_ford(uint32_t nb_nodes, uint32_t nb_edges, branch_t* links,uint3
 
 void free_ford_strtuct(ford_t * ford);
 
-mcost_t * get_max(int32_t nb_nodes, uint32_t * dist, int source);
+mcost_t * get_max(int32_t nb_nodes, int32_t * dist, uint32_t source);
 
 void free_max_strct(mcost_t * mcost);
 
-int32_t * get_path(uint32_t dest, uint32_t source, uint32_t* path, int32_t* size);
+int32_t * get_path(uint32_t dest, uint32_t source, int32_t* path, int32_t* size);
 
 void free_path(int32_t * path);
 

@@ -10,7 +10,6 @@ This structure contains, the number of edges and nodes that the graph but also t
 Input:
 ----------
 char* file_name : the name/location of the file
-graph_t* graph : pointer to the graph structure that stores the information about the graph 
 
 Output:
 ----------
@@ -111,10 +110,10 @@ This algorithm also works when negative values are introduced for the cost betwe
 
 Input:
 ----------
-int32_t nb_nodes : number of nodes in the graph
-int32_t nb_edges : number of edges in the graph
-int32_t ** links : array of size nb_edges containing the links of the graph
-int s : source node
+uint32_t nb_nodes : number of nodes in the graph
+uint32_t nb_edges : number of edges in the graph
+branch_t * links : array of size nb_edges containing the links of the graph
+uint32_t s : source node
 bool verbose : boolean to print the result or not
 
 Output:
@@ -200,16 +199,16 @@ This function returns us the most "expensive node" to reach as a structure that 
 
 Input:
 ----------
-int nb_nodes : the number of nodes in the graph
+int32_t nb_nodes : the number of nodes in the graph
 int32_t * dist : pointer to the array that stores the distances from each node to each node
-int soucre : the source node 
+uint32_t soucre : the source node 
 
 Output:
 ----------
 mcost_t * max : the structure that stores the node and cost
 NULL + perror message if there was an error
 */
-mcost_t * get_max(int32_t nb_nodes, uint32_t * dist, int source){
+mcost_t * get_max(int32_t nb_nodes, int32_t * dist, uint32_t source){
     mcost_t * max = (mcost_t *)malloc(sizeof(mcost_t));
     if (max == NULL){perror("Could not allocate memory in the get_max function");return NULL;}
     int64_t max_cost = (uint64_t)dist[source];
@@ -246,8 +245,8 @@ This function returns the path from the source node to the destination node give
 
 Input:
 ----------
-int dest : the destination node 
-int source : the source node 
+uint32_t dest : the destination node 
+uint32_t source : the source node 
 int32_t * path : pointer to the array that stores the paths from each node to each node
 int32_t * size : pointer that keeps track of the lenght of the path  
 
@@ -256,7 +255,7 @@ Output:
 mcost_t * max : the structure that stores the node and cost
 NULL + perror message if there was an error
 */
-int32_t* get_path(uint32_t dest, uint32_t source, uint32_t* path, int32_t* size) {
+int32_t* get_path(uint32_t dest, uint32_t source, int32_t* path, int32_t* size) {
     uint32_t* the_path = (uint32_t*)malloc(sizeof(uint32_t) * (*size));
     if (the_path == NULL){perror("Could not allocate memory in the get_path function");return NULL;}
     uint32_t i = dest;
@@ -295,23 +294,30 @@ int main(int args, char ** argv){
     double execution_time;
     start = clock();
     bool verbose;
-    int source = 0;
     char * file_name = "graph.bin";
     graph_t * graph = get_file_info(file_name);
-    if (graph == NULL){return 1;}
-    ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, true);
-    printf("nb nodes : %u, nb edges : %u\n", graph->file_infos->nb_nodes, graph->file_infos->nb_edges);
-    for (int i = 0; i < graph->file_infos->nb_nodes; i++){
-        printf("dist : %d, path : %d\n", result->dist[i], result->path[i]);
+    if (graph == NULL){printf("yo");return 1;}
+    for (uint32_t source; source < graph->file_infos->nb_nodes; source++){
+        ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, true);
+        if (result == NULL){printf("yo");return 1;}
+        printf("source node : %u\nDistances : [", source);
+        for (int i = 0; i < graph->file_infos->nb_nodes; i++){
+            printf(" %d", result->dist[i]);
+        }
+        mcost_t * max = get_max(graph->file_infos->nb_nodes, result->dist, source);
+        if (max == NULL){printf("yo");return 1;}
+        uint32_t size;
+        int32_t * path = get_path(max->node, source, result->path, &size);
+        if (path == NULL){printf("yo");return 1;}
+        printf("]\n    Destination : %u\n    Cost : %d\n    Number of nodes : %d\n    Path: ", max->node, max->cost, size);
+        for (int j = 0; j < size; j++){
+            printf(" %d ",path[j]);
+        }
+        printf("\n");
+        free_path(path);
+        free_max_strct(max);
+        free_ford_struct(result);
     }
-    mcost_t * max = get_max(graph->file_infos->nb_nodes, result->dist, source);
-    uint32_t size;
-    int32_t * path = get_path(max->node, source, result->path, &size);
-    for (int j = 0; j < size; j++){
-        printf(" %d ",path[j]);
-    }
-    free_max_strct(max);
-    free_ford_struct(result);
     free_graph_struct(graph);
     end = clock();
     execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
