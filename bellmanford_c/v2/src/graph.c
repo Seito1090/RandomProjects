@@ -52,14 +52,34 @@ graph_t * get_file_info(char* file_name){
 
     /* Reading the graph branches */
     
-    graph->graph_data = (int32_t*)malloc(nb_edges * 3 * sizeof(int32_t));
+    graph->graph_data = (branch_t*)malloc(nb_edges * sizeof(branch_t));
     if (graph->graph_data == NULL) {fclose(file);free(graph);
-        perror("Could not allocate memory for nodes_edges, free memory and try again");return NULL;}
-    if (graph->graph_data == NULL) {fclose(file);return NULL;}
+        perror("Could not allocate memory for graph_data, free memory and try again");return NULL;}
+    
+    graph->graph_data->cost = (int32_t*)malloc(nb_edges * sizeof(int32_t));
+    if (graph->graph_data->cost == NULL) {fclose(file);free(graph);
+        perror("Could not allocate memory for graph_data structure, free memory and try again");return NULL;}
+
+    graph->graph_data->node_from = (uint32_t*)malloc(nb_edges * sizeof(uint32_t));
+    if (graph->graph_data->node_from == NULL) {fclose(file);free(graph);
+        perror("Could not allocate memory for graph_data structure, free memory and try again");return NULL;}
+    
+    graph->graph_data->node_to = (uint32_t*)malloc(nb_edges * sizeof(uint32_t));
+    if (graph->graph_data->node_to == NULL) {fclose(file);free(graph);
+        perror("Could not allocate memory for graph_data structure, free memory and try again");return NULL;}
+    
     for (int i = 0; i < 3*nb_edges; i++){
         unsigned char buffer1[4]; // Buffer + checks for branches
         if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
-        graph->graph_data[i] = ((int32_t)buffer1[0] << 24) | ((int32_t)buffer1[1] << 16) | ((int32_t)buffer1[2] << 8) | buffer1[3];
+        if (i % 3 == 2){
+            graph->graph_data->cost[i/3] = ((int32_t)buffer1[0] << 24) | ((int32_t)buffer1[1] << 16) | ((int32_t)buffer1[2] << 8) | buffer1[3];
+        } else if (i % 3 == 1){
+            graph->graph_data->node_to[i/3] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
+        } else if (i % 3 == 0){
+            graph->graph_data->node_from[i/3] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
+        } else {
+            perror("Unsupported format");return NULL;
+        }
     }
     fclose(file);
     graph->file_infos->nb_nodes = nb_nodes;
@@ -75,6 +95,9 @@ Function used to free the memory allocated to the graph structure that was used
 */
 void free_graph_struct(graph_t* graph){
     free(graph->file_infos);
+    free(graph->graph_data->cost);
+    free(graph->graph_data->node_from);
+    free(graph->graph_data->node_to);
     free(graph->graph_data);
     free(graph);
 }
@@ -99,11 +122,11 @@ Output:
 ford_t * ford_links : structure that keeps track of distances between the source and each other node, the path between the source and the other nodes 
 NULL + perror message if there was an error
 */
-ford_t* bellman_ford(int32_t nb_nodes, int32_t nb_edges, int32_t * links, int s, bool verbose){
+ford_t* bellman_ford(uint32_t nb_nodes, uint32_t nb_edges, branch_t * links, uint32_t s, bool verbose){
     // Initialization
     ford_t* ford_links = (ford_t*)malloc(sizeof(ford_t)); 
     if (ford_links == NULL){perror("Erreur d'allocation de mémoire pour la structure de bellman_ford"); return NULL;}
-    int32_t* distances = (int32_t*)malloc(sizeof(int32_t) * nb_nodes);
+    uint32_t* distances = (uint32_t*)malloc(sizeof(uint32_t) * nb_nodes);
     if (distances == NULL){perror("Erreur d'allocation de mémoire pour la structure de bellman_ford"); return NULL;}
     int32_t* paths = (int32_t*)malloc(sizeof(int32_t) * nb_nodes);
     if (paths == NULL){perror("Erreur d'allocation de mémoire pour la structure de bellman_ford"); return NULL;}
@@ -117,10 +140,10 @@ ford_t* bellman_ford(int32_t nb_nodes, int32_t nb_edges, int32_t * links, int s,
     // Main loop for belman ford
     for (int i = 0; i < nb_nodes-1; i++) {
         bool no_update = false; // Allows us to terminate the loop if we see that it has no reason to continue 
-        for (int j = 0; j < nb_edges*3; j+=3) {
-            int32_t node_from = links[j];
-            int32_t node_to = links[j+1];
-            int32_t cost = links[j+2];
+        for (int j = 0; j < nb_edges; j++) {
+            uint32_t node_from = links->node_from[j];
+            uint32_t node_to = links->node_to[j];
+            int32_t cost = links->cost[j];
             if (distances[node_from] != INT32_MAX && distances[node_to] > distances[node_from] + cost) {
                 distances[node_to] = distances[node_from] + cost;
                 paths[node_to] = node_from;
@@ -133,10 +156,10 @@ ford_t* bellman_ford(int32_t nb_nodes, int32_t nb_edges, int32_t * links, int s,
     }
 
     // Detection of negative cycle
-    for (int k = 0; k < nb_edges*3; k+=3){
-        int32_t node_from = links[k];
-        int32_t node_to = links[k+1];
-        int32_t cost = links[k+2];
+    for (int k = 0; k < nb_edges; k+=3){
+        uint32_t node_from = links->node_from[k];
+        uint32_t node_to = links->node_to[k];
+        int32_t cost = links->cost[k];
         if (distances[node_from] != INT32_MAX && distances[node_to] > distances[node_from] + cost){
             if (verbose){
                 printf("Negative cycle detected");
@@ -186,11 +209,11 @@ Output:
 mcost_t * max : the structure that stores the node and cost
 NULL + perror message if there was an error
 */
-mcost_t * get_max(int32_t nb_nodes, int32_t * dist, int source){
+mcost_t * get_max(int32_t nb_nodes, uint32_t * dist, int source){
     mcost_t * max = (mcost_t *)malloc(sizeof(mcost_t));
     if (max == NULL){perror("Could not allocate memory in the get_max function");return NULL;}
-    int32_t max_cost = dist[source];
-    int max_node = source;
+    uint32_t max_cost = (uint32_t)dist[source];
+    int32_t max_node = source;
     for (int node_idx = 0; node_idx < nb_nodes; node_idx++){
         if (node_idx != source && dist[node_idx] != INT32_MAX && dist[node_idx] >= max_cost){
             if (dist[node_idx] == max_cost && max_node < node_idx){
@@ -233,11 +256,11 @@ Output:
 mcost_t * max : the structure that stores the node and cost
 NULL + perror message if there was an error
 */
-int32_t* get_path(int dest, int source, int32_t* path, int32_t* size) {
-    int32_t* the_path = (int32_t*)malloc(sizeof(int32_t) * (*size));
+int32_t* get_path(uint32_t dest, uint32_t source, uint32_t* path, int32_t* size) {
+    uint32_t* the_path = (uint32_t*)malloc(sizeof(uint32_t) * (*size));
     if (the_path == NULL){perror("Could not allocate memory in the get_path function");return NULL;}
-    int32_t i = dest;
-    int32_t the_path_indx = 0;
+    uint32_t i = dest;
+    uint32_t the_path_indx = 0;
     // Create the path array starting from the destination back to the source
     while (i != source){
         the_path[the_path_indx++] = i;
@@ -247,8 +270,8 @@ int32_t* get_path(int dest, int source, int32_t* path, int32_t* size) {
     *size = the_path_indx;
     
     // Reverse the array to return the path to take in the right order, source -> destination 
-    for (int32_t j = 0; j < the_path_indx / 2; j++) {
-        int32_t temp = the_path[j];
+    for (uint32_t j = 0; j < the_path_indx / 2; j++) {
+        uint32_t temp = the_path[j];
         the_path[j] = the_path[the_path_indx - j - 1];
         the_path[the_path_indx - j - 1] = temp;
     }
@@ -277,9 +300,16 @@ int main(int args, char ** argv){
     graph_t * graph = get_file_info(file_name);
     if (graph == NULL){return 1;}
     ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, true);
+    printf("nb nodes : %u, nb edges : %u\n", graph->file_infos->nb_nodes, graph->file_infos->nb_edges);
+    for (int i = 0; i < graph->file_infos->nb_nodes; i++){
+        printf("dist : %d, path : %d\n", result->dist[i], result->path[i]);
+    }
     mcost_t * max = get_max(graph->file_infos->nb_nodes, result->dist, source);
-    int32_t size;
+    uint32_t size;
     int32_t * path = get_path(max->node, source, result->path, &size);
+    for (int j = 0; j < size; j++){
+        printf(" %d ",path[j]);
+    }
     free_max_strct(max);
     free_ford_struct(result);
     free_graph_struct(graph);
