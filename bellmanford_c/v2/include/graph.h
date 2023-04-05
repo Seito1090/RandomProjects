@@ -13,7 +13,7 @@ typedef struct branch{
     uint32_t * node_from;
     uint32_t * node_to;
     int32_t * cost;
-}branch_t;
+} branch_t;
 
 typedef struct file_data{
     uint32_t nb_edges;
@@ -28,7 +28,7 @@ typedef struct graph{
 typedef struct ford{
     int32_t * dist;
     int32_t * path;
-}ford_t;
+} ford_t;
 
 typedef struct mcost{
     int64_t cost;
