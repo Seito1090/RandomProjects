@@ -268,11 +268,11 @@ void free_path(int32_t * path){
 
 
 int main(int args, char ** argv){
-    bool verbose;
-    int source = 0;
     clock_t start, end;
     double execution_time;
     start = clock();
+    bool verbose;
+    int source = 0;
     char * file_name = "graph.bin";
     graph_t * graph = get_file_info(file_name);
     if (graph == NULL){return 1;}
