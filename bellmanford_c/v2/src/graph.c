@@ -15,7 +15,7 @@ graph_t* graph : pointer to the graph structure that stores the information abou
 Output:
 ----------
 graph_t * graph = the mentionned structure
-NULL : if there was any error 
+NULL + perror message if there was an error
 */
 graph_t * get_file_info(char* file_name){ 
     FILE * file = fopen(file_name, "rb"); if (file == NULL) {perror("Could not open the file");return NULL;} //Opens file and checks if it opened correctly
@@ -97,6 +97,7 @@ bool verbose : boolean to print the result or not
 Output:
 ----------
 ford_t * ford_links : structure that keeps track of distances between the source and each other node, the path between the source and the other nodes 
+NULL + perror message if there was an error
 */
 ford_t* bellman_ford(int32_t nb_nodes, int32_t nb_edges, int32_t * links, int s, bool verbose){
     // Initialization
@@ -183,6 +184,7 @@ int soucre : the source node
 Output:
 ----------
 mcost_t * max : the structure that stores the node and cost
+NULL + perror message if there was an error
 */
 mcost_t * get_max(int32_t nb_nodes, int32_t * dist, int source){
     mcost_t * max = (mcost_t *)malloc(sizeof(mcost_t));
@@ -229,6 +231,7 @@ int32_t * size : pointer that keeps track of the lenght of the path
 Output:
 ----------
 mcost_t * max : the structure that stores the node and cost
+NULL + perror message if there was an error
 */
 int32_t* get_path(int dest, int source, int32_t* path, int32_t* size) {
     int32_t* the_path = (int32_t*)malloc(sizeof(int32_t) * (*size));
@@ -273,10 +276,6 @@ int main(int args, char ** argv){
     char * file_name = "graph.bin";
     graph_t * graph = get_file_info(file_name);
     if (graph == NULL){return 1;}
-    printf("nodes : %u, edges : %u\n", graph->file_infos->nb_nodes, graph->file_infos->nb_edges);
-    for (int i = 0; i < graph->file_infos->nb_edges*3; i+=3){
-        printf("i = %d, start : %d, end : %d, cost : %d\n", i/3, graph->graph_data[i], graph->graph_data[i+1], graph->graph_data[i+2]);
-    }
     ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, true);
     mcost_t * max = get_max(graph->file_infos->nb_nodes, result->dist, source);
     int32_t size;
