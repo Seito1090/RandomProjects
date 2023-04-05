@@ -31,7 +31,7 @@ typedef struct ford{
 }ford_t;
 
 typedef struct mcost{
-    int32_t cost;
+    int64_t cost;
     uint32_t node;
 } mcost_t;
 

@@ -126,7 +126,7 @@ ford_t* bellman_ford(uint32_t nb_nodes, uint32_t nb_edges, branch_t * links, uin
     // Initialization
     ford_t* ford_links = (ford_t*)malloc(sizeof(ford_t)); 
     if (ford_links == NULL){perror("Erreur d'allocation de mémoire pour la structure de bellman_ford"); return NULL;}
-    uint32_t* distances = (uint32_t*)malloc(sizeof(uint32_t) * nb_nodes);
+    int32_t* distances = (int32_t*)malloc(sizeof(int32_t) * nb_nodes);
     if (distances == NULL){perror("Erreur d'allocation de mémoire pour la structure de bellman_ford"); return NULL;}
     int32_t* paths = (int32_t*)malloc(sizeof(int32_t) * nb_nodes);
     if (paths == NULL){perror("Erreur d'allocation de mémoire pour la structure de bellman_ford"); return NULL;}
@@ -212,8 +212,8 @@ NULL + perror message if there was an error
 mcost_t * get_max(int32_t nb_nodes, uint32_t * dist, int source){
     mcost_t * max = (mcost_t *)malloc(sizeof(mcost_t));
     if (max == NULL){perror("Could not allocate memory in the get_max function");return NULL;}
-    uint32_t max_cost = (uint32_t)dist[source];
-    int32_t max_node = source;
+    int64_t max_cost = (uint64_t)dist[source];
+    uint32_t max_node = source;
     for (int node_idx = 0; node_idx < nb_nodes; node_idx++){
         if (node_idx != source && dist[node_idx] != INT32_MAX && dist[node_idx] >= max_cost){
             if (dist[node_idx] == max_cost && max_node < node_idx){
