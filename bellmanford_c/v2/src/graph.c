@@ -115,15 +115,20 @@ ford_t* bellman_ford(int32_t nb_nodes, int32_t nb_edges, int32_t * links, int s,
     distances[s] = 0;
     
     //Main loop for belman ford
-    for (int i = 0; i < nb_nodes - 1; i++){
-        for (int j = 0; j < nb_edges*3; j+=3){
+    for (int i = 0; i < nb_nodes-1; i++) {
+        bool no_update = false;
+        for (int j = 0; j < nb_edges*3; j+=3) {
             int32_t node_from = links[j];
             int32_t node_to = links[j+1];
             int32_t cost = links[j+2];
-            if (distances[node_from] != INT32_MAX && distances[node_to] > distances[node_from] + cost){
+            if (distances[node_from] != INT32_MAX && distances[node_to] > distances[node_from] + cost) {
                 distances[node_to] = distances[node_from] + cost;
                 paths[node_to] = node_from;
+                no_update = true;
             }
+        }
+        if (!no_update) {
+            break;
         }
     }
 
@@ -152,11 +157,19 @@ ford_t* bellman_ford(int32_t nb_nodes, int32_t nb_edges, int32_t * links, int s,
     return ford_links;
 }
 
+/*
+Function free_ford_struct
+-------------------------------------
+
+Function used to free the memory allocated to the ford structure that was used
+*/
 void free_ford_struct(ford_t* ford){
     free(ford->dist);
     free(ford->path);
     free(ford);
 }
+//---------------------------------------------------------------------------------------------------------
+
 
 int main(int args, char ** argv){
     bool verbose;
