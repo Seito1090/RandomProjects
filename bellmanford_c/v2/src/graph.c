@@ -170,6 +170,50 @@ void free_ford_struct(ford_t* ford){
 }
 //---------------------------------------------------------------------------------------------------------
 
+/*
+Function get_max
+-------------------------------------
+This function returns us the most "expensive node" to reach as a structure that stores the node and the cost
+
+Input:
+----------
+int nb_nodes : the number of nodes in the graph
+int32_t * dist : pointer to the array that stores the distances from each node to each node
+int soucre : the source node 
+
+Output:
+----------
+mcost_t * max : the structure that stores the node and cost
+*/
+mcost_t * get_max(int nb_nodes, int32_t * dist, int source){
+    mcost_t * max = malloc(sizeof(mcost_t));
+    int32_t max_cost = dist[source];
+    int max_node = source;
+    for (int node_idx = 0; node_idx < nb_nodes; node_idx++){
+        if (node_idx != source && dist[node_idx] != INT32_MAX && dist[node_idx] >= max_cost){
+            if (dist[node_idx] == max_cost && max_node < node_idx){
+                continue;
+            }
+            max_cost = dist[node_idx];
+            max_node = node_idx;
+        }
+    }
+    max->cost = max_cost;
+    max->node = max_node;
+    return max;
+}
+
+/*
+Function free_max_struct
+-------------------------------------
+
+Function used to free the memory allocated to the mcost structure that was used
+*/
+void free_max_strct(mcost_t * mcost){
+    free(mcost);
+}
+//---------------------------------------------------------------------------------------------------------
+
 
 int main(int args, char ** argv){
     bool verbose;
@@ -181,9 +225,9 @@ int main(int args, char ** argv){
     graph_t * graph = get_file_info(file_name);
     printf("nodes : %u, edges : %u\n", graph->file_infos->nb_nodes, graph->file_infos->nb_edges);
     ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, true);
-    for (int i = 0; i < graph->file_infos->nb_nodes; i++){
-        printf("dist[%d] = %d, path[%d] = %d\n", i ,result->dist[i], i, result->path[i]);
-    }
+    mcost_t * max = get_max(graph->file_infos->nb_nodes, result->dist, source);
+    printf("node : %d, cost : %d \n", max->node, max->cost);
+    free_max_strct(max);
     free_ford_struct(result);
     free_graph_struct(graph);
     end = clock();

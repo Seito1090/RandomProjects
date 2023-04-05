@@ -25,6 +25,10 @@ typedef struct ford{
     int32_t * path;
 }ford_t;
 
+typedef struct mcost{
+    int32_t cost;
+    int32_t node;
+} mcost_t;
 
 // TODO: declarez les fonctions liees a graph_t.
 
@@ -35,5 +39,7 @@ void free_graph_struct(graph_t* graph);
 ford_t* bellman_ford(int32_t nb_nodes, int32_t nb_edges, int32_t* links,int source, bool verbose);
 
 void free_ford_strtuct(ford_t * ford);
+
+mcost_t * get_max(int nb_nodes, int32_t * dist, int source);
 
 #endif // LEPL1503__GRAPH__

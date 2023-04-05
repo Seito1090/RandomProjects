@@ -23,21 +23,21 @@ float* get_max(int size_dist, float* dist, int source){
     return max;
 }
 
-// int main(int argc,char** argv){
-//     char* file_name = "graph.bin";
-//     unsigned int** links = read_graph(file_name);
-//     unsigned int nb_nodes = links[11][0];
-//     unsigned int nb_edges = links[11][1];
-//     float** result = belman_ford(nb_nodes, nb_edges, links, 11, 0, true);
-//     for (int i = 0; i < nb_nodes; i++){
-//         printf("%f %f\n", result[0][i], result[1][i]);
-//     }
-//     float* max = get_max(nb_nodes, result[0], 0);
-//     int cost = (int)max[0];
-//     int node = (int)max[1];
-//     printf("max: %d %d\n", cost, node);
-//     return 0;
-// }
+int main(int argc,char** argv){
+    char* file_name = "graph.bin";
+    unsigned int** links = read_graph(file_name);
+    unsigned int nb_nodes = links[0][0];
+    unsigned int nb_edges = links[0][1];
+    float** result = belman_ford(nb_nodes, nb_edges, links, 11, 0, true);
+    for (int i = 0; i < nb_nodes; i++){
+        printf("%f %f\n", result[0][i], result[1][i]);
+    }
+    float* max = get_max(nb_nodes, result[0], 0);
+    int cost = (int)max[0];
+    int node = (int)max[1];
+    printf("max: %d %d\n", cost, node);
+    return 0;
+}
 
 
 
