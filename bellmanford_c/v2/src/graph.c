@@ -18,21 +18,13 @@ graph_t * graph = the mentionned structure
 NULL : if there was any error 
 */
 graph_t * get_file_info(char* file_name){ 
-    /* Doing not the same as in the python code */
     FILE * file = fopen(file_name, "rb"); if (file == NULL) {perror("Could not open the file");return NULL;} //Opens file and checks if it opened correctly
     // Create the structure in which the graph will be stored + checks
     graph_t* graph = malloc(sizeof(graph_t));
     if (graph == NULL) {fclose(file);perror("Could not allocate memory for the graph, free memory and try again");return NULL;};
-    graph->graph_data = malloc(sizeof(int32_t *));
-    if (graph->graph_data == NULL) {fclose(file);free(graph);
-        perror("Could not allocate memory for nodes_edges, free memory and try again");
-        return NULL;
-    }
     graph->file_infos = malloc(sizeof(file_data_t));
     if (graph->file_infos == NULL) {fclose(file);free(graph->graph_data);free(graph);
-        perror("Could not allocate memory for file_infos, free memory and try again");
-        return NULL;
-    }
+        perror("Could not allocate memory for file_infos, free memory and try again");return NULL;}
     /* 
     This works on Linux/ MacOs but not on windows 
     TODO: make sure that it works on all things without issues
@@ -42,6 +34,7 @@ graph_t * get_file_info(char* file_name){
     // fread(&edges, sizeof(int32_t), 1, file);
     // graph->nodes_edges->nb_nodes = be32toh(nodes);
     // graph->nodes_edges->nb_edges  = be32toh(edges);
+    
     /* Reading basic info done */ 
 
     /* Failsafe method but slower ? */
@@ -59,14 +52,15 @@ graph_t * get_file_info(char* file_name){
 
     /* Reading the graph branches */
     
-    int32_t* binary_data = (int32_t*)malloc(nb_edges * 3 * sizeof(int32_t));
-    if (binary_data == NULL) {fclose(file);return NULL;}
+    graph->graph_data = (int32_t*)malloc(nb_edges * 3 * sizeof(int32_t));
+    if (graph->graph_data == NULL) {fclose(file);free(graph);
+        perror("Could not allocate memory for nodes_edges, free memory and try again");return NULL;}
+    if (graph->graph_data == NULL) {fclose(file);return NULL;}
     for (int i = 0; i < 3*nb_edges; i++){
         unsigned char buffer1[4]; // Buffer + checks for branches
-        if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(binary_data);return NULL;}
-        binary_data[i] = ((int32_t)buffer1[0] << 24) | ((int32_t)buffer1[1] << 16) | ((int32_t)buffer1[2] << 8) | buffer1[3];
+        if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
+        graph->graph_data[i] = ((int32_t)buffer1[0] << 24) | ((int32_t)buffer1[1] << 16) | ((int32_t)buffer1[2] << 8) | buffer1[3];
     }
-    graph->graph_data = binary_data;
     fclose(file);
     graph->file_infos->nb_nodes = nb_nodes;
     graph->file_infos->nb_edges = nb_edges;
@@ -280,6 +274,9 @@ int main(int args, char ** argv){
     graph_t * graph = get_file_info(file_name);
     if (graph == NULL){return 1;}
     printf("nodes : %u, edges : %u\n", graph->file_infos->nb_nodes, graph->file_infos->nb_edges);
+    for (int i = 0; i < graph->file_infos->nb_edges*3; i+=3){
+        printf("i = %d, start : %d, end : %d, cost : %d\n", i/3, graph->graph_data[i], graph->graph_data[i+1], graph->graph_data[i+2]);
+    }
     ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, true);
     mcost_t * max = get_max(graph->file_infos->nb_nodes, result->dist, source);
     int32_t size;
