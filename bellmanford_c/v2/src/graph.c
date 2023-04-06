@@ -307,20 +307,20 @@ int main(int args, char ** argv){
     for (uint32_t source = 0; source < graph->file_infos->nb_nodes; source++){
         ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, verbose);
         if (result == NULL){printf("bellmand failed\n");return 1;}
-        printf("source node : %u\nDistances : [", source);
-        for (int i = 0; i < graph->file_infos->nb_nodes; i++){
-            printf(" %d", result->dist[i]);
-        }
+        //printf("source node : %u\nDistances : [", source);
+        //for (int i = 0; i < graph->file_infos->nb_nodes; i++){
+        //    printf(" %d", result->dist[i]);
+        //}
         mcost_t * max = get_max(graph->file_infos->nb_nodes, result->dist, source);
         if (max == NULL){printf("get max failed\n");return 1;}
         int32_t size = graph->file_infos->nb_nodes;
         int32_t * path = get_path(max->node, source, result->path, &size);
         if (path == NULL){printf("get path failed\n");return 1;}
-        printf("]\n    Destination : %u\n    Cost : %ld\n    Number of nodes : %d\n    Path: ", max->node, max->cost, size);
-        for (int j = 0; j < size; j++){
-            printf(" %d ",path[j]);
-        }
-        printf("\n");
+        //printf("]\n    Destination : %u\n    Cost : %ld\n    Number of nodes : %d\n    Path: ", max->node, max->cost, size);
+        //for (int j = 0; j < size; j++){
+        //    printf(" %d ",path[j]);
+        //}
+        //printf("\n");
         free_path(path);
         free_max_strct(max);
         free_ford_struct(result);

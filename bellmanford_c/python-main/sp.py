@@ -1,6 +1,7 @@
 import math
 import argparse
 import sys
+import time 
 
 
 def get_file_infos(data):
@@ -110,7 +111,7 @@ def read_graph(filename):
 
 
 if __name__ == "__main__":
-
+    startTime = time.time()
     # parser = argparse.ArgumentParser(
     #     description="LEPL1503 - Algorithme de plus court chemin")
     # parser.add_argument(
@@ -143,14 +144,14 @@ if __name__ == "__main__":
         # Ils peuvent donc etre affiches (uniquement si la sortie choisie est stdout ou stderr)
         # meme si le mode verbose n'est pas actif.
         # if output_fd == sys.stdout or output_fd == sys.stderr:
-        print("source : " + str(source))
-        print("Distances: ", dist)
+        #print("source : " + str(source))
+        #print("Distances: ", dist)
         d, n = get_max(dist, source)
-        print("\tdestination : " + str(n))
-        print("\tcout : " + str(d))
+        #print("\tdestination : " + str(n))
+        #print("\tcout : " + str(d))
         p = get_path(n, path, source)
-        print("\tnombre de noeuds : " + str(len(p)))
-        print("\tchemin : " + " ".join(str(x) for x in p))
+        #print("\tnombre de noeuds : " + str(len(p)))
+        #print("\tchemin : " + " ".join(str(x) for x in p))
         # else:
         #     output_fd.write(source.to_bytes(4, "big"))
         #     d, n = get_max(dist, source)
@@ -161,3 +162,5 @@ if __name__ == "__main__":
         #     for j in range(len(r)):
         #         output_fd.write(r[j].to_bytes(4, "big"))
 
+    executionTime = (time.time() - startTime)
+    print('Execution time in seconds: ' + str(executionTime))
