@@ -17,7 +17,7 @@ graph_t * graph = the mentionned structure
 NULL + perror message if there was an error
 */
 graph_t * get_file_info(char* file_name){ 
-    FILE * file = fopen(file_name, "rb"); if (file == NULL) {perror("Could not open the file");return NULL;} //Opens file and checks if it opened correctly
+    FILE * file = fopen(file_name, "rb"); if (file == NULL) {perror("Could not open the graph file");return NULL;} //Opens file and checks if it opened correctly
     // Create the structure in which the graph will be stored + checks
     graph_t* graph = malloc(sizeof(graph_t));
     if (graph == NULL) {fclose(file);perror("Could not allocate memory for the graph, free memory and try again");return NULL;};
@@ -296,24 +296,24 @@ int main(int args, char ** argv){
     bool verbose = true;
     char * file_name = "graph.bin";
     graph_t * graph = get_file_info(file_name);
-    if (graph == NULL){printf("yo");return 1;}
-    for (uint32_t source; source < graph->file_infos->nb_nodes; source++){
+    if (graph == NULL){printf("get file info failed\n");return 1;}
+    for (uint32_t source = 0; source < graph->file_infos->nb_nodes; source++){
         ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, verbose);
-        if (result == NULL){printf("yo");return 1;}
-        printf("source node : %u\nDistances : [", source);
-        for (int i = 0; i < graph->file_infos->nb_nodes; i++){
-            printf(" %d", result->dist[i]);
-        }
+        if (result == NULL){printf("bellmand failed\n");return 1;}
+        //printf("source node : %u\nDistances : [", source);
+        //for (int i = 0; i < graph->file_infos->nb_nodes; i++){
+        //    printf(" %d", result->dist[i]);
+        //}
         mcost_t * max = get_max(graph->file_infos->nb_nodes, result->dist, source);
-        if (max == NULL){printf("yo");return 1;}
+        if (max == NULL){printf("get max failed\n");return 1;}
         int32_t size;
         int32_t * path = get_path(max->node, source, result->path, &size);
-        if (path == NULL){printf("yo");return 1;}
-        printf("]\n    Destination : %u\n    Cost : %ld\n    Number of nodes : %d\n    Path: ", max->node, max->cost, size);
-        for (int j = 0; j < size; j++){
-            printf(" %d ",path[j]);
-        }
-        printf("\n");
+        if (path == NULL){printf("get path failed\n");return 1;}
+        //printf("]\n    Destination : %u\n    Cost : %ld\n    Number of nodes : %d\n    Path: ", max->node, max->cost, size);
+        //for (int j = 0; j < size; j++){
+        //    printf(" %d ",path[j]);
+        //}
+        //printf("\n");
         free_path(path);
         free_max_strct(max);
         free_ford_struct(result);
