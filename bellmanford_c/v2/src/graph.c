@@ -45,41 +45,40 @@ graph_t * get_file_info(char* file_name){
     int32_t nb_edges = ((int32_t)buffer[4] << 24) | ((int32_t)buffer[5] << 16) | ((int32_t)buffer[6] << 8) | buffer[7];
 
     /* If the graph is empty we do not need to contiue */
-    if (nb_nodes == 0){perror("Graph vide ou mal construit"); return NULL;}
+    if (nb_nodes <= 0 || nb_edges <= 0){perror("Graph vide ou mal construit"); return NULL;}
     
     //------------------------------------------------------
 
     /* Reading the graph branches */
     
-    graph->graph_data = (branch_t*)malloc(nb_edges * sizeof(branch_t));
+    graph->graph_data = malloc(nb_edges * sizeof(branch_t));
     if (graph->graph_data == NULL) {fclose(file);free(graph);
         perror("Could not allocate memory for graph_data, free memory and try again");return NULL;}
     
-    graph->graph_data->cost = (int32_t*)malloc(nb_edges * sizeof(int32_t));
+    graph->graph_data->cost = malloc(nb_edges * sizeof(int32_t));
     if (graph->graph_data->cost == NULL) {fclose(file);free(graph);
         perror("Could not allocate memory for graph_data structure, free memory and try again");return NULL;}
 
-    graph->graph_data->node_from = (uint32_t*)malloc(nb_edges * sizeof(uint32_t));
+    graph->graph_data->node_from = malloc(nb_edges * sizeof(uint32_t));
     if (graph->graph_data->node_from == NULL) {fclose(file);free(graph);
         perror("Could not allocate memory for graph_data structure, free memory and try again");return NULL;}
     
-    graph->graph_data->node_to = (uint32_t*)malloc(nb_edges * sizeof(uint32_t));
+    graph->graph_data->node_to = malloc(nb_edges * sizeof(uint32_t));
     if (graph->graph_data->node_to == NULL) {fclose(file);free(graph);
         perror("Could not allocate memory for graph_data structure, free memory and try again");return NULL;}
     
-    for (int i = 0; i < 3*nb_edges; i++){
-        unsigned char buffer1[4]; // Buffer + checks for branches
-        if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
-        if (i % 3 == 2){
-            graph->graph_data->cost[i/3] = ((int32_t)buffer1[0] << 24) | ((int32_t)buffer1[1] << 16) | ((int32_t)buffer1[2] << 8) | buffer1[3];
-        } else if (i % 3 == 1){
-            graph->graph_data->node_to[i/3] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
-        } else if (i % 3 == 0){
-            graph->graph_data->node_from[i/3] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
-        } else {
-            perror("Unsupported format");return NULL;
-        }
-    }
+    for (int i = 0; i < nb_edges; i++){
+    unsigned char buffer1[4]; // Buffer + checks for branches
+    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
+    graph->graph_data->node_from[i] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
+
+    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
+    graph->graph_data->node_to[i] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
+
+    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
+    graph->graph_data->cost[i] = ((int32_t)buffer1[0] << 24) | ((int32_t)buffer1[1] << 16) | ((int32_t)buffer1[2] << 8) | buffer1[3];
+}
+
     fclose(file);
     graph->file_infos->nb_nodes = nb_nodes;
     graph->file_infos->nb_edges = nb_edges;
@@ -256,7 +255,7 @@ mcost_t * max : the structure that stores the node and cost
 NULL + perror message if there was an error
 */
 int32_t* get_path(uint32_t dest, uint32_t source, int32_t* path, int32_t* size) {
-    int32_t* the_path = (int32_t*)malloc(sizeof(int32_t) * (*size));
+    int32_t* the_path = (int32_t*)malloc(sizeof(int32_t) * (*size + 1));
     if (the_path == NULL){perror("Could not allocate memory in the get_path function");return NULL;}
     uint32_t i = dest;
     uint32_t the_path_indx = 0;
