@@ -6,7 +6,7 @@ Here are contained the tests to make sure the functions impelemented in the grap
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../include/graph.h"
+#include "../../include/graph.h"
 
 // Test Suite setup and cleanup functions:
 //TODO: Add tests for cases where the graph is not connected
@@ -72,7 +72,37 @@ void test_get_file_info(void){
 }
 
 void test_bellman_ford(void){
+    //Default graph 
+    FILE * default_test = fopen("tests/CUnit/default.bin", "rb");
+    if (default_test == NULL){exit(1);}
+    graph_t * default_graph = get_file_info(default_test);
+    if (default_graph == NULL) {exit(1);}
+    ford_t * result = bellman_ford(default_graph->file_infos->nb_nodes, default_graph->file_infos->nb_edges, default_graph->graph_data, 0, false);
+    if (result == NULL){exit(1);}
+    //Asserts Equals here for distances and paths 
+    free_ford_struct(result);
+    ford_t * result = bellman_ford(default_graph->file_infos->nb_nodes, default_graph->file_infos->nb_edges, default_graph->graph_data, 0, false);
+    if (result == NULL){exit(1);}
+    //Asserts Equals here for distances and paths
+    free_ford_struct(result);
+    free_graph_struct(default_graph);
+    fclose(default_test);
 
+    //Graph with negative cost
+    FILE * neg_test = fopen("tests/CUnit/graph_neg.bin", "rb");
+    if (neg_test == NULL){exit(1);}
+    graph_t * neg_graph = get_file_info(neg_test);
+    if (neg_graph == NULL) {exit(1);}
+    ford_t * result = bellman_ford(neg_graph->file_infos->nb_nodes, neg_graph->file_infos->nb_edges, neg_graph->graph_data, 1, false);
+    if (result == NULL){exit(1);}
+    //Asserts Equals here for distances and paths 
+    free_ford_struct(result);
+    ford_t * result = bellman_ford(neg_graph->file_infos->nb_nodes, neg_graph->file_infos->nb_edges, neg_graph->graph_data, 1, false);
+    if (result == NULL){exit(1);}
+    //Asserts Equals here for distances and paths
+    free_ford_struct(result);
+    free_graph_struct(neg_graph);
+    fclose(neg_test);
 }
 
 void test_get_max(void){
@@ -92,8 +122,8 @@ int main(){
         CU_cleanup_registry();
         return CU_get_error();
     }
-    if ((NULL == CU_add_test(pSuite, "test of get_file_info()", test_get_file_info)) //||
-        // (NULL == CU_add_test(pSuite, "test of bellman_ford()", test_bellman_ford)) ||
+    if ((NULL == CU_add_test(pSuite, "test of get_file_info()", test_get_file_info)) ||
+        (NULL == CU_add_test(pSuite, "test of bellman_ford()", test_bellman_ford)) //||
         // (NULL == CU_add_test(pSuite, "test of get_max()", test_get_max)) ||
         // (NULL == CU_add_test(pSuite, "test of get_path()", test_get_path))
         ){

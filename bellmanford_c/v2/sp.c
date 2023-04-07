@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
     //Now the code 
     //Our file is already opened thanks to the parse_args function
     graph_t * graph = get_file_info(args.input_file);
-    if (graph == NULL) {fprintf(stderr, "Error while creating the graph"); exit(EXIT_FAILURE);}
+    if (graph == NULL) {fprintf(stderr, "Error while creating the graph"); return 1;}
     for (uint32_t source = 0; source < graph->file_infos->nb_nodes; source++){
         ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, args.verbose);
         if (result == NULL){printf("bellmand failed\n");return 1;}
