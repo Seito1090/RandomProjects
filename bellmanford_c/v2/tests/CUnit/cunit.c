@@ -72,7 +72,7 @@ void test_get_file_info(void){
 }
 
 void test_bellman_ford(void){
-    
+
 }
 
 void test_get_max(void){
@@ -86,4 +86,21 @@ void test_get_path(void){
 int main(){
     if (CUE_SUCCESS != CU_initialize_registry())
         return CU_get_error();
+    CU_pSuite pSuite = NULL;
+    pSuite = CU_add_suite("Suite_1", NULL, NULL);
+    if (NULL == pSuite) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+    if ((NULL == CU_add_test(pSuite, "test of get_file_info()", test_get_file_info)) //||
+        // (NULL == CU_add_test(pSuite, "test of bellman_ford()", test_bellman_ford)) ||
+        // (NULL == CU_add_test(pSuite, "test of get_max()", test_get_max)) ||
+        // (NULL == CU_add_test(pSuite, "test of get_path()", test_get_path))
+        ){
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+    CU_basic_run_tests();
+    CU_basic_show_failures(CU_get_failure_list());
+    CU_cleanup_registry();
 }
