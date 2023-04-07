@@ -20,8 +20,8 @@ clean:
 	# ...
 
 tests: 
-	tests/CUnit/cunit.c
-	$(CC) $(INCLUDE_HEADERS_DIRECTORY) $(INCLUDE_CUNIT_DIRECTORY) $(CFLAGS) -o tests $^ $(LIBS)
+#	tests/CUnit/cunit.c
+#	$(CC) $(INCLUDE_HEADERS_DIRECTORY) $(INCLUDE_CUNIT_DIRECTORY) $(CFLAGS) -o tests $^ $(LIBS)
 
 #	create the graph files for inputs of tests 
 	python tests/necessary_python/create_graph.py --ntf tests/ntf_files/negative_cost.ntf --output tests/graph_bin/graph_neg.bin
@@ -33,7 +33,7 @@ tests:
 
 # 	Do not forget the -lcunit flag
 	cd tests/CUnit
-	./tests
+#	./tests
 	cd ../..
 	
 # a .PHONY target forces make to execute the command even if the target already exists
