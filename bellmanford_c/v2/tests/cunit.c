@@ -246,7 +246,7 @@ void test_get_path(void){
     CU_ASSERT_EQUAL(size_def2, 3);
     CU_ASSERT_EQUAL(path_def_2[0], 0);
     CU_ASSERT_EQUAL(path_def_2[1], 2); 
-    CU_ASSERT_EQUAL(path_def_2[2], 2);
+    CU_ASSERT_EQUAL(path_def_2[2], 1);
 
     free_path(path_def_2);
     free_max_struct(max_def_5);
