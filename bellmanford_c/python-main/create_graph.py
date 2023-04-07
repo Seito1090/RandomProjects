@@ -92,7 +92,7 @@ if __name__ == "__main__":
                         help="Number of links. Unused if '--ntf'", default=10)
     parser.add_argument("-c", "--c-header", action="store_true",
                         help="Writes the graph as a C header file (.h) instead of a binary file")
-    parser.add_argument("-s", "--seed", type=int, help="Seed for random generation of the graph", default=4294786)
+    parser.add_argument("-s", "--seed", type=int, help="Seed for random generation of the graph", default=42)
     args = parser.parse_args()
 
     if args.ntf:
