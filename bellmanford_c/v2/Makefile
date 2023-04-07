@@ -28,7 +28,7 @@ tests:
 	python tests/necessary_python/sp.py tests/graph_bin/graph_def.bin -f tests/result_bin/result_def.bin
 	python tests/necessary_python/sp.py tests/graph_bin/graph_neg.bin -f tests/result_bin/result_neg.bin
 
-	# Do not forget the -lcunit flag
+# 	Do not forget the -lcunit flag
 	echo "TODO: compile and execute the tests!"
 	echo "TODO: take into account the 2 bin files already done, empty and corrupted"
 
