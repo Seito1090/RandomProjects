@@ -5,7 +5,7 @@ INCLUDE_HEADERS_DIRECTORY=-Iinclude
 
 # compile the program with gcc
 sp: src/graph.o sp.c     
-	$(CC) $(INCLUDE_HEADERS_DIRECTORY) $(CFLAGS) -o main $^ $(LIBS)    
+	$(CC) $(INCLUDE_HEADERS_DIRECTORY) $(CFLAGS) -o main $^ #$(LIBS)    
 
 #%.o: %.c                  # if for example you want to compute example.c this will create an object file called example.o in the same directory as example.c. Don't forget to clean it in your "make clean"
 #	$(CC) $(INCLUDE_HEADERS_DIRECTORY) $(CFLAGS) -o $@ -c $<
