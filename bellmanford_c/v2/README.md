@@ -18,7 +18,7 @@ Pour lancer le programme, il faut d'abord le compiler, voici quelques commandes 
 
 Pour des soucis de clareté utiliser toujours **make clean** après avoir fini d'utiliser le programme 
 
-#### Utilisation de la fonction main 
+### Utilisation de la fonction main 
 
 La fonction main prend comme arguments : 
  - *-n* : Le nombre de threads que le programme va utiliser 
