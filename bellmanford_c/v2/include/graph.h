@@ -1,3 +1,6 @@
+#ifndef LEPL1503__GRAPH__
+#define LEPL1503__GRAPH__
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -5,9 +8,6 @@
 #include <string.h>
 #include <fcntl.h>
 #include <time.h>
-
-#ifndef LEPL1503__GRAPH__
-#define LEPL1503__GRAPH__
 
 typedef struct branch{
     uint32_t * node_from;
@@ -36,17 +36,17 @@ typedef struct mcost{
 } mcost_t;
 
 
-graph_t * get_file_info(char* file_name);
+graph_t * get_file_info(FILE * file);
 
 void free_graph_struct(graph_t* graph);
 
 ford_t* bellman_ford(uint32_t nb_nodes, uint32_t nb_edges, branch_t* links,uint32_t source, bool verbose);
 
-void free_ford_strtuct(ford_t * ford);
+void free_ford_struct(ford_t * ford);
 
 mcost_t * get_max(int32_t nb_nodes, int32_t * dist, uint32_t source);
 
-void free_max_strct(mcost_t * mcost);
+void free_max_struct(mcost_t * mcost);
 
 int32_t * get_path(uint32_t dest, uint32_t source, int32_t* path, int32_t* size);
 

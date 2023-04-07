@@ -1,11 +1,13 @@
 #include <errno.h>
 #include <getopt.h>
 #include <inttypes.h>
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
+#include <fcntl.h>
+#include <time.h>
 
 // Keep these includes for macos compatibility.
 #include "include/portable_endian.h"
@@ -71,14 +73,6 @@ int parse_args(args_t *args, int argc, char *argv[]) {
                 args->verbose = true;
                 break;
             case 'f':
-#ifdef LEPL1503_USE_HEADER_INSTANCE
-                fprintf(stderr,
-                        "Vous utilisez un fichier header comme instance de "
-                        "graphe. Cela annule l'utilisation de l'argument donne "
-                        "par -f. Veuillez retirer l'include au header si ce "
-                        "n'est pas le comportement desire.\n");
-                break;
-#endif  // LEPL1503_USE_HEADER_INSTANCE
                 args->output_stream = fopen(optarg, "w+");
                 if (args->output_stream == NULL) {
                     fprintf(stderr,
@@ -88,6 +82,8 @@ int parse_args(args_t *args, int argc, char *argv[]) {
                 }
                 break;
             case '?':
+                usage(argv[0]);
+                return 1;
             case 'h':
                 usage(argv[0]);
                 return 1;
@@ -97,13 +93,7 @@ int parse_args(args_t *args, int argc, char *argv[]) {
         }
     }
 
-#ifdef LEPL1503_USE_HEADER_INSTANCE
-    fprintf(stderr,
-            "Vous utilisez un fichier header comme instance de "
-            "graphe. Cela annule l'utilisation du fichier d'instance en entree "
-            "donne en argument. Veuillez retirer l'include au header si ce "
-            "n'est pas le comportement desire.\n");
-#else
+
     if (optind == argc) {
         fprintf(stderr,
                 "Vous devez fournir un fichier d'instance en entree !\n");
@@ -116,12 +106,16 @@ int parse_args(args_t *args, int argc, char *argv[]) {
                 argv[optind], strerror(errno));
         return -1;
     }
-#endif  // LEPL1503_USE_HEADER_INSTANCE
 
     return 0;
 }
 
 int main(int argc, char *argv[]) {
+    // This bit is only for checking the execution time 
+    clock_t start, end;
+    double execution_time;
+    start = clock();
+
     /*Part that was given to us in the example code*/
     args_t args;
     int err = parse_args(&args, argc, argv);
@@ -130,29 +124,42 @@ int main(int argc, char *argv[]) {
     } else if (err == 1) {
         exit(EXIT_SUCCESS);
     }
+    //Setting the input file name so that we know how to name the output file :) tho not sure if needed cuz we pass it as an argument 
+    // char * file_name = argv[argc - 1];
     
-    // Vous remplacerez ce code par la lecture du fichier binaire
-    // args.input_file apres le module 5 INGInious. En attendant, vous pouvez
-    // acceder aux variables comme donne par l'exemple ci-dessous.
-    if (args.verbose) {
-        // Veillez a bien utiliser les macros PRI pour afficher vos valeurs.
-        // Cela permet de gerer les differentes plateformes comme le raspberry.
-        fprintf(stderr, "Nombre de noeuds: %" PRIu32 "\n", NB_NODES);
-        fprintf(stderr, "Nombre de liens: %" PRIu32 "\n", NB_LINKS);
-        for (int i = 0; i < NB_LINKS; ++i) {
-            fprintf(stderr,
-                    "Lien: %" PRIu32 " -> %" PRIu32 " (cout de %" PRIi32 ")\n",
-                    (uint32_t)links[i][0], (uint32_t)links[i][1],
-                    (int32_t)links[i][2]);
-        }
+    //Now the code 
+    //Our file is already opened thanks to the parse_args function
+    graph_t * graph = get_file_info(args.input_file);
+    if (graph == NULL) {fprintf(stderr, "Error while creating the graph"); exit(EXIT_FAILURE);}
+    for (uint32_t source = 0; source < graph->file_infos->nb_nodes; source++){
+        ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, args.verbose);
+        if (result == NULL){printf("bellmand failed\n");return 1;}
+        //printf("source node : %u\nDistances : [", source);
+        //for (int i = 0; i < graph->file_infos->nb_nodes; i++){
+        //    printf(" %d", result->dist[i]);
+        //}
+        mcost_t * max = get_max(graph->file_infos->nb_nodes, result->dist, source);
+        if (max == NULL){printf("get max failed\n");return 1;}
+        int32_t size = graph->file_infos->nb_nodes;
+        int32_t * path = get_path(max->node, source, result->path, &size);
+        if (path == NULL){printf("get path failed\n");return 1;}
+        //printf("]\n    Destination : %u\n    Cost : %ld\n    Number of nodes : %d\n    Path: ", max->node, max->cost, size);
+        //for (int j = 0; j < size; j++){
+        //    printf(" %d ",path[j]);
+        //}
+        //printf("\n");
+        free_path(path);
+        free_max_struct(max);
+        free_ford_struct(result);
     }
-
-    if (args.input_file != NULL) {
-        fclose(args.input_file);
-    }
+    free_graph_struct(graph);
 
     if (args.output_stream != stdout) {
         fclose(args.output_stream);
     }
+
+    end = clock();
+    execution_time = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Execution time : %f\n", execution_time);
     return 0;
 }
