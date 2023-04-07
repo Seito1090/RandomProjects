@@ -7,17 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-// /!\ ATTENTION : vous devez garder ces deux include dans votre code.
-// Ils remplacent <endian.h> et <semaphore.h> pour fournir une compatibilite
-// avec macOS.
+// Keep these includes for macos compatibility.
 #include "include/portable_endian.h"
 #include "include/portable_semaphore.h"
 
-// Tant que vous n'avez pas vu la lecture des fichiers (module 5 INGInious),
-// vous pouvez utiliser un fichier header pour definir vos graphes.
-// Ce fichier a ete genere en utilisant le script fourni avec l'implementation
-// Python.
-#include "small_instance.h"
 
 // Votre architecture de code doit etre propre et bien structuree.
 // Nous vous demandons d'implementer un maximum des fonctionnalites independantes
@@ -57,7 +50,7 @@ void usage(char *prog_name) {
 int parse_args(args_t *args, int argc, char *argv[]) {
     memset(args, 0, sizeof(args_t));
 
-    // Valeurs pas defaut pour les arguments.
+    // Valeurs par defaut pour les arguments.
     args->nb_threads = 4;
     args->verbose = false;
     args->output_stream = stdout;
@@ -129,6 +122,7 @@ int parse_args(args_t *args, int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
+    /*Part that was given to us in the example code*/
     args_t args;
     int err = parse_args(&args, argc, argv);
     if (err == -1) {
@@ -136,7 +130,7 @@ int main(int argc, char *argv[]) {
     } else if (err == 1) {
         exit(EXIT_SUCCESS);
     }
-
+    
     // Vous remplacerez ce code par la lecture du fichier binaire
     // args.input_file apres le module 5 INGInious. En attendant, vous pouvez
     // acceder aux variables comme donne par l'exemple ci-dessous.

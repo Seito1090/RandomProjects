@@ -87,12 +87,12 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", type=str,
                         help="Output file", default="graph.bin")
     parser.add_argument("-n", "--nodes", type=int,
-                        help="Number of nodes. Unused if '--ntf'", default=5)
+                        help="Number of nodes. Unused if '--ntf'", default=10)
     parser.add_argument("-l", "--links", type=int,
-                        help="Number of links. Unused if '--ntf'", default=10)
+                        help="Number of links. Unused if '--ntf'", default=20)
     parser.add_argument("-c", "--c-header", action="store_true",
                         help="Writes the graph as a C header file (.h) instead of a binary file")
-    parser.add_argument("-s", "--seed", type=int, help="Seed for random generation of the graph", default=42)
+    parser.add_argument("-s", "--seed", type=int, help="Seed for random generation of the graph", default=4294786)
     args = parser.parse_args()
 
     if args.ntf:
