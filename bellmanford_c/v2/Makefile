@@ -13,6 +13,7 @@ sp: src/graph.o sp.c     # add your other object files needed to compile your pr
 clean:
 	rm -f src/*.o
 	rm -f main
+	rm -f tests/CUnit/*.o
 	rm -f tests/graph_bin/graph*
 	rm -f tests/result_bin/result*
 	# ...
