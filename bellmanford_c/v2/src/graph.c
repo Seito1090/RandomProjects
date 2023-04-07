@@ -250,7 +250,7 @@ int32_t * size : pointer that keeps track of the lenght of the path
 
 Output:
 ----------
-mcost_t * max : the structure that stores the node and cost
+int32_t * the_path : the array with the path
 NULL + perror message if there was an error
 */
 int32_t* get_path(uint32_t dest, uint32_t source, int32_t* path, int32_t* size) {
