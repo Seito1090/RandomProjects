@@ -44,7 +44,7 @@ graph_t * get_file_info(FILE * file){
     int32_t nb_edges = ((int32_t)buffer[4] << 24) | ((int32_t)buffer[5] << 16) | ((int32_t)buffer[6] << 8) | buffer[7];
 
     /* If the graph is empty we do not need to contiue */
-    if (nb_nodes <= 0 || nb_edges <= 0){perror("Graph vide ou mal construit"); return NULL;}
+    if (nb_nodes <= 0 || nb_edges <= 0){perror("Graph vide"); return NULL;}
     
     //------------------------------------------------------
 
@@ -293,41 +293,3 @@ void free_path(int32_t * path){
     free(path);
 }
 //---------------------------------------------------------------------------------------------------------
-
-
-// int main(int args, char ** argv){
-//     clock_t start, end;
-//     double execution_time;
-//     start = clock();
-//     bool verbose = true;
-//     char * file_name = "graph.bin";
-//     FILE * file = fopen(file_name, "rb"); if (file == NULL) {perror("Could not open the graph file");return 1;} //Opens file and checks if it opened correctly
-//     graph_t * graph = get_file_info(file);
-//     if (graph == NULL){printf("get file info failed\n");return 1;}
-//     for (uint32_t source = 0; source < graph->file_infos->nb_nodes; source++){
-//         ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, verbose);
-//         if (result == NULL){printf("bellmand failed\n");return 1;}
-//         printf("source node : %u\nDistances : [", source);
-//         for (int i = 0; i < graph->file_infos->nb_nodes; i++){
-//         printf(" %d", result->dist[i]);
-//         }
-//         mcost_t * max = get_max(graph->file_infos->nb_nodes, result->dist, source);
-//         if (max == NULL){printf("get max failed\n");return 1;}
-//         int32_t size = graph->file_infos->nb_nodes;
-//         int32_t * path = get_path(max->node, source, result->path, &size);
-//         if (path == NULL){printf("get path failed\n");return 1;}
-//         printf("]\n    Destination : %u\n    Cost : %ld\n    Number of nodes : %d\n    Path: ", max->node, max->cost, size);
-//         for (int j = 0; j < size; j++){
-//            printf(" %d ",path[j]);
-//         }
-//         printf("\n");
-//         free_path(path);
-//         free_max_struct(max);
-//         free_ford_struct(result);
-//     }
-//     free_graph_struct(graph);
-//     end = clock();
-//     execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
-//     printf("Execution time : %f\n", execution_time);
-//     return 0;
-// }

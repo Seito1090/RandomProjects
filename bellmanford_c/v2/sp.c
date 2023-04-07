@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
         // for (int j = 0; j < size; j++){
         //    printf(" %d ",path[j]);
         // }
-        printf("\n");
+        // printf("\n");
         free_path(path);
         free_max_struct(max);
         free_ford_struct(result);

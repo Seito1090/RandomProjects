@@ -20,12 +20,11 @@ clean:
 
 tests:
 #	create the graph files for inputs of tests 
-	python tests/necessary_python/create_graph.py --output tests/graph_bin/graph_def.bin
 	python tests/necessary_python/create_graph.py --ntf tests/ntf_files/negative_cost.ntf --output tests/graph_bin/graph_neg.bin
 	python tests/necessary_python/create_graph.py --ntf tests/ntf_files/zeros_everywhere.ntf --output tests/graph_bin/graph_0.bin
 
 #   run the python code to compute the expected outputs of tests	
-	python tests/necessary_python/sp.py tests/graph_bin/graph_def.bin -f tests/result_bin/result_def.bin
+	python tests/necessary_python/sp.py tests/graph_bin/default.bin -f tests/result_bin/result_def.bin
 	python tests/necessary_python/sp.py tests/graph_bin/graph_neg.bin -f tests/result_bin/result_neg.bin
 
 # 	Do not forget the -lcunit flag

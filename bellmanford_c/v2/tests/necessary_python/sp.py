@@ -135,7 +135,7 @@ if __name__ == "__main__":
 
     graph, nb_nodes = read_graph(args.input_file)
     if output_fd == sys.stdout or output_fd == sys.stderr:
-        print("Nombre de noeuds: " + str(nb_nodes))
+        print("Nombre de noeuds: " + str(nb_nodes) + ", nombre de liens: " + str(len(graph)))
     else:
         output_fd.write(nb_nodes.to_bytes(4, "big"))
     

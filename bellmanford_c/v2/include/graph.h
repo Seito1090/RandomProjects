@@ -40,7 +40,7 @@ graph_t * get_file_info(FILE * file);
 
 void free_graph_struct(graph_t* graph);
 
-ford_t* bellman_ford(uint32_t nb_nodes, uint32_t nb_edges, branch_t* links,uint32_t source, bool verbose);
+ford_t* bellman_ford(uint32_t nb_nodes, uint32_t nb_edges, branch_t* links, uint32_t source, bool verbose);
 
 void free_ford_struct(ford_t * ford);
 

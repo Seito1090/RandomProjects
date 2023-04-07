@@ -20,7 +20,8 @@
         {
             "name": "linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "../../../local/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/cpp",
