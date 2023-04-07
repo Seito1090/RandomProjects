@@ -112,30 +112,32 @@ def read_graph(filename):
 
 if __name__ == "__main__":
     startTime = time.time()
-    # parser = argparse.ArgumentParser(
-    #     description="LEPL1503 - Algorithme de plus court chemin")
-    # parser.add_argument(
-    #     "input_file", help="chemin vers le fichier d'instance representant le graphe a traiter.")
-    # parser.add_argument("-f", help="chemin vers le fichier qui contiendra le resultat de programme, au format specifie dans l'enonce. Defaut : stdout.",
-    #                     type=argparse.FileType("wb"), default=sys.stdout)
-    # parser.add_argument(
-    #     "-v", help="autorise les messages de debug. Si ce n'est pas active, aucun message de ce type ne peut etre affiche, excepte les messages d'erreur en cas d'echec. Defaut : False.", action="store_true")
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser(
+        description="LEPL1503 - Algorithme de plus court chemin")
+    parser.add_argument(
+        "input_file", help="chemin vers le fichier d'instance representant le graphe a traiter.")
+    parser.add_argument("-f", help="chemin vers le fichier qui contiendra le resultat de programme, au format specifie dans l'enonce. Defaut : stdout.",
+                        type=argparse.FileType("wb"), default=sys.stdout)
+    parser.add_argument(
+        "-v", help="autorise les messages de debug. Si ce n'est pas active, aucun message de ce type ne peut etre affiche, excepte les messages d'erreur en cas d'echec. Defaut : False.", action="store_true")
+    parser.add_argument(
+        "-t", help="affiche le temps d'execution de l'algorithme. Defaut : False.", action="store_true")
+    args = parser.parse_args()
 
-    verbose = False
-    # output_fd = args.f
+    verbose = args.v
+    output_fd = args.f
     nb_nodes = None
     nb_edges = None
 
-    # if verbose:
-    #     # Exemple de message que vous pouvez ecrire si le mode verbose est actif.
-    #     print(args, file=sys.stderr)
+    if verbose:
+        # Exemple de message que vous pouvez ecrire si le mode verbose est actif.
+        print(args, file=sys.stderr)
 
-    graph, nb_nodes = read_graph("graph.bin")
-    # if output_fd == sys.stdout or output_fd == sys.stderr:
-    #     print("Nombre de noeuds: " + str(nb_nodes))
-    # else:
-    #     output_fd.write(nb_nodes.to_bytes(4, "big"))
+    graph, nb_nodes = read_graph(args.input_file)
+    if output_fd == sys.stdout or output_fd == sys.stderr:
+        print("Nombre de noeuds: " + str(nb_nodes))
+    else:
+        output_fd.write(nb_nodes.to_bytes(4, "big"))
     
     for source in range(nb_nodes):
         dist, path = bellman_ford(graph, source, verbose)
@@ -143,24 +145,25 @@ if __name__ == "__main__":
         # Ces messages ne sont pas des messages de debug.
         # Ils peuvent donc etre affiches (uniquement si la sortie choisie est stdout ou stderr)
         # meme si le mode verbose n'est pas actif.
-        # if output_fd == sys.stdout or output_fd == sys.stderr:
-        #print("source : " + str(source))
-        #print("Distances: ", dist)
-        d, n = get_max(dist, source)
-        #print("\tdestination : " + str(n))
-        #print("\tcout : " + str(d))
-        p = get_path(n, path, source)
-        #print("\tnombre de noeuds : " + str(len(p)))
-        #print("\tchemin : " + " ".join(str(x) for x in p))
-        # else:
-        #     output_fd.write(source.to_bytes(4, "big"))
-        #     d, n = get_max(dist, source)
-        #     output_fd.write(n.to_bytes(4, "big"))
-        #     output_fd.write(d.to_bytes(8, "big", signed=True))
-        #     r = get_path(n, path, source)
-        #     output_fd.write(len(r).to_bytes(4, "big", signed=True))
-        #     for j in range(len(r)):
-        #         output_fd.write(r[j].to_bytes(4, "big"))
+        if output_fd == sys.stdout or output_fd == sys.stderr:
+            #print("source : " + str(source))
+            #print("Distances: ", dist)
+            d, n = get_max(dist, source)
+            #print("\tdestination : " + str(n))
+            #print("\tcout : " + str(d))
+            p = get_path(n, path, source)
+            #print("\tnombre de noeuds : " + str(len(p)))
+            #print("\tchemin : " + " ".join(str(x) for x in p))
+        else:
+            output_fd.write(source.to_bytes(4, "big"))
+            d, n = get_max(dist, source)
+            output_fd.write(n.to_bytes(4, "big"))
+            output_fd.write(d.to_bytes(8, "big", signed=True))
+            r = get_path(n, path, source)
+            output_fd.write(len(r).to_bytes(4, "big", signed=True))
+            for j in range(len(r)):
+                output_fd.write(r[j].to_bytes(4, "big"))
 
     executionTime = (time.time() - startTime)
-    print('Execution time in seconds: ' + str(executionTime))
+    if args.t:
+        print('Execution time in seconds: ' + str(executionTime))

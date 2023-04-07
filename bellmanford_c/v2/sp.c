@@ -13,14 +13,7 @@
 #include "include/portable_endian.h"
 #include "include/portable_semaphore.h"
 
-
-// Votre architecture de code doit etre propre et bien structuree.
-// Nous vous demandons d'implementer un maximum des fonctionnalites independantes
-// dans des fichiers differents.
-// Par exemple, toutes les definitions de fonctions qui concernent
-// la creation et manipulation de graphe devrait se retrouver dans include/graph.h
-// et le code source lie dans src/graph.c.
-// Vous devriez faire de meme pour tous les autres modules de votre code.
+// Our own architecture independent header.
 #include "include/graph.h"
 
 typedef struct {

@@ -70,10 +70,10 @@ graph_t * get_file_info(FILE * file){
     unsigned char buffer1[4]; // Buffer + checks for branches
     if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
     graph->graph_data->node_from[i] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
-
+    if (graph->graph_data->node_from[i] < 0 || graph->graph_data->node_from[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data);return NULL;}
     if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
     graph->graph_data->node_to[i] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
-
+    if (graph->graph_data->node_to[i] < 0 || graph->graph_data->node_to[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data);return NULL;}
     if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
     graph->graph_data->cost[i] = ((int32_t)buffer1[0] << 24) | ((int32_t)buffer1[1] << 16) | ((int32_t)buffer1[2] << 8) | buffer1[3];
 }
