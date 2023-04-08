@@ -122,3 +122,13 @@
 # #     nom = random.choice(list)
 # #     list.remove(nom)
 # #     print(nom)
+def files_are_equal(file1, file2):
+    with open(file1, 'r') as f1, open(file2, 'r') as f2:
+        contents1 = f1.read()
+        contents2 = f2.read()
+        if contents1 == contents2:
+            return True
+        else:
+            return False
+
+print(files_are_equal("bellmanford_c/v2/output", "bellmanford_c/v2/outputpy"))
