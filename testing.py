@@ -130,5 +130,20 @@ def files_are_equal(file1, file2):
             return True
         else:
             return False
+        
+def read_binary_file(file_path1, file_path2):
+    with open(file_path1, 'rb') as f1, open(file_path2, 'rb') as f2:
+        while True:
+            # Read 4 bytes in big-endian byte order
+            data1 = f1.read(4)
+            data2 = f2.read(4)
+            if not data1 or not data2:
+                break
+            # Unpack the 4 bytes as a big-endian integer
+            value1 = int.from_bytes(data1, byteorder='big')
+            value2 = int.from_bytes(data2, byteorder='big')
+            # Print the integer value
+            print("val py : ", value1 ," val c : " , value2)
 
-print(files_are_equal("bellmanford_c/v2/output", "bellmanford_c/v2/outputpy"))
+read_binary_file("bellmanford_c/v2/outputpy","bellmanford_c/v2/output")
+#print(files_are_equal("bellmanford_c/v2/output", "bellmanford_c/v2/outputpy"))

@@ -400,13 +400,9 @@ int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t size_path
 
     // Convert the data to big endian format
     uint8_t buffer0[4], buffer1[4],buffer2[4], buffer3[8];
-    printf("source: %d\n", source);
     int32_to_big_endian(source, buffer0);
-    printf("max->node: %d\n", max->node);
     int32_to_big_endian(max->node, buffer1);
-    printf("max->cost: %ld\n", max->cost);
     int32_to_big_endian(max->cost, buffer2);
-    printf("size_path: %d\n", size_path);
     int64_to_big_endian(size_path, buffer3);
     
     // Write the data to the file
@@ -415,29 +411,35 @@ int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t size_path
         printf("Error: Failed to write source node.\n");
         return 1;
     }
+    printf("wrote source node (%s)\n", buffer0);
 
     //destination node
-    if (fwrite(buffer2, sizeof(uint8_t), 4, file) != 4) {
+    if (fwrite(buffer1, sizeof(uint8_t), 4, file) != 4) {
         printf("Error: Failed to write destination node.\n");
         return 1;
     }
+    printf("wrote destination node (%s)\n", buffer1);
 
     //cost
-    if (fwrite(buffer3, sizeof(uint8_t), 8, file) != 8) {
+    if (fwrite(buffer2, sizeof(uint8_t), 8, file) != 8) {
         printf("Error: Failed to write cost.\n");
         return 1;
     }
+    printf("wrote cost (%s)\n", buffer2);
 
     //number of nodes in the path
     if (fwrite(buffer3, sizeof(uint8_t), 4, file) != 4) {
         printf("Error: Failed to write path size.\n");
         return 1;
     }
+    printf("wrote path size (%s)\n", buffer3);
+    
     //path
+    uint8_t buffer4[4];
     for (int i = 0; i < size_path; i++) {
         printf("path[%d]: %d\n", i, path[i]);
-        int32_to_big_endian(path[i],buffer1);
-        if (fwrite(buffer1, sizeof(uint8_t), 4, file) != 4) {
+        int32_to_big_endian(path[i],buffer4);
+        if (fwrite(buffer4, sizeof(uint8_t), 4, file) != 4) {
             printf("Error: Failed to write path element %d.\n", i);
             return 1;
         }

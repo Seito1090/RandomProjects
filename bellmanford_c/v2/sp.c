@@ -124,6 +124,15 @@ int main(int argc, char *argv[]) {
     //Our file is already opened thanks to the parse_args function
     graph_t * graph = get_file_info(args.input_file);
     if (graph == NULL) {fprintf(stderr, "Error while creating the graph"); return 1;}
+    if (args.output_stream != stdout){
+        uint8_t buffer0[4];
+        int32_to_big_endian(graph->file_infos->nb_nodes, buffer0);
+        if (fwrite(buffer0, sizeof(uint8_t), 4, args.output_stream) != 4) {
+            printf("Error: Failed to write source node.\n");
+            return 1;
+        }
+    }
+    
     for (uint32_t source = 0; source < graph->file_infos->nb_nodes; source++){
         ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, args.verbose);
         if (result == NULL){printf("bellmand failed\n");return 1;}
