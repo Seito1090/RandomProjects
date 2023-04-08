@@ -167,6 +167,7 @@ void test_empty(void){
 void test_corrupted(void){
     FILE * corrupted_test = fopen("tests/graph_bin/corrupted.bin", "rb");
     if (corrupted_test == NULL){printf("corrupted_test get file info"); exit(1);}
+    
     graph_t * corrupted_graph = get_file_info(corrupted_test);
 
     CU_ASSERT_EQUAL(corrupted_graph, NULL);
@@ -182,10 +183,8 @@ void test_only_zeros(void){
         exit(1);
     }
     graph_t * zero_graph = get_file_info(zero_test);
-    printf("hey\n");
-    CU_ASSERT_EQUAL(zero_graph, NULL);
-    
 
+    CU_ASSERT_EQUAL(zero_graph, NULL);
     
     printf("Test only zeros passed\n");
 }
@@ -204,7 +203,7 @@ int main(){
     if ((NULL == CU_add_test(pSuite, "test of default graph", test_default)) ||
         (NULL == CU_add_test(pSuite, "test of graph with negative cost", test_negative_cost)) ||
         (NULL == CU_add_test(pSuite, "test of empty graph", test_empty)) ||
-        // (NULL == CU_add_test(pSuite, "test of corrupted graph", test_corrupted)) ||
+        (NULL == CU_add_test(pSuite, "test of corrupted graph", test_corrupted)) ||
         (NULL == CU_add_test(pSuite, "test of full zeros graph", test_only_zeros)) 
         ){
         CU_cleanup_registry();

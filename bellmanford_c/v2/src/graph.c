@@ -56,7 +56,10 @@ graph_t * get_file_info(FILE * file){
     //------------------------------------------------------
 
     /* Reading the graph branches */
-    
+    fseek(file, 0, SEEK_END);
+    int32_t size = ftell(file);
+    if (size != (nb_edges*12)+8) {perror("Corrompu");fclose(file); free(graph->file_infos);free(graph); return NULL;}
+    fseek(file, 8, SEEK_SET);
     graph->graph_data = (branch_t*)malloc(nb_edges * sizeof(branch_t));
     if (graph->graph_data == NULL) {fclose(file);free(graph);
         perror("Could not allocate memory for graph_data, free memory and try again");return NULL;}
