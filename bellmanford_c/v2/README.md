@@ -25,3 +25,6 @@ La fonction main prend comme arguments :
  - *-v* : Affichage des messages d'erreur, false par defaut
  - *-f* : Le fichier dans lequel les donnee seront sauvegardees
  - *-?* / *-h* : Affiche une fenetre avec cette explication 
+
+### Utilisation de graph personnels
+
