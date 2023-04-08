@@ -42,15 +42,24 @@ For more information about the functions, please refer to the file graph.c
 
 /*
 Function : int_to_big_endian
-Description : This function converts big endian to uint32_t.
+Description : This function converts big endian to u    int32_t.
 */
-uint32_t big_endian_to_int(const unsigned char *buffer);
+uint32_t big_endian_to_int(unsigned char *buffer);
 
 /*
-Function : int_to_big_endian
+Function : int32_to_big_endian
 Description : This function converts uint32_t to big endian.
 */
-void int_to_big_endian(uint32_t value, unsigned char *buffer);
+void int32_to_big_endian(uint32_t value, unsigned char *buffer);
+
+/* 
+Function : int64_to_big_endian
+Description : This function converts int64_t to big endian.
+*/
+void int64_to_big_endian(int64_t value, unsigned char *buffer);
+
+//Those 3 functions are used only for consistency purposes, this way it can work on linux, windows and macos without having to play with headers 
+//------------------------------------------------------------
 
 /*
 Function : get_file_info
@@ -104,6 +113,6 @@ void free_path(int32_t * path);
 Function : write_to_file
 Description : This function writes the results in the output file.
 */
-int write_to_file(FILE * file, file_data_t * file_infos, mcost_t * max, int32_t * size_path, int32_t * path);
+int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t * size_path, int32_t * path);
 
 #endif // LEPL1503__GRAPH__

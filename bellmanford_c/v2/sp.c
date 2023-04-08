@@ -148,6 +148,7 @@ int main(int argc, char *argv[]) {
     free_graph_struct(graph);
 
     if (args.output_stream != stdout) {
+        write_to_file(args.output_stream, source, max, size, path);
         fclose(args.output_stream);
     }
 

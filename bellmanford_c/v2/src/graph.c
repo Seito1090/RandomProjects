@@ -1,6 +1,64 @@
 #include "../include/graph.h"
 
 /*
+Function big_endian_to_int
+-------------------------------------
+
+Function that converts big endian to uint32_t
+
+Input:
+----------
+unsigned char *buffer : the buffer containing the bits
+
+Output:
+----------
+uint32_t : the converted value
+*/
+uint32_t big_endian_to_int(unsigned char *buffer) {
+    return ((uint32_t)buffer[0] << 24) | ((uint32_t)buffer[1] << 16) | ((uint32_t)buffer[2] << 8) | buffer[3];
+}
+
+/*
+Function int32_to_big_endian
+-------------------------------------
+
+Function that converts uint32_t to big endian
+
+Input:
+----------
+uint32_t value : the value to convert
+unsigned char *buffer : the buffer in which the converted value will be stored
+*/
+void int32_to_big_endian(uint32_t value, unsigned char *buffer) {
+    buffer[0] = (value >> 24) & 0xFF;
+    buffer[1] = (value >> 16) & 0xFF;
+    buffer[2] = (value >> 8) & 0xFF;
+    buffer[3] = value & 0xFF;
+}
+
+/*
+Function int64_to_big_endian
+-------------------------------------
+
+Function that converts int64_t to big endian
+
+Input:
+----------
+int64_t value : the value to convert
+unsigned char *buffer : the buffer in which the converted value will be stored
+*/
+void int64_to_big_endian(int64_t value, unsigned char *buffer) {
+    buffer[0] = (value >> 56) & 0xff;
+    buffer[1] = (value >> 48) & 0xff;
+    buffer[2] = (value >> 40) & 0xff;
+    buffer[3] = (value >> 32) & 0xff;
+    buffer[4] = (value >> 24) & 0xff;
+    buffer[5] = (value >> 16) & 0xff;
+    buffer[6] = (value >> 8) & 0xff;
+    buffer[7] = value & 0xff;
+}
+
+/*
 Function get_file_info
 -------------------------------------
 
@@ -36,11 +94,12 @@ graph_t * get_file_info(FILE * file){
     
     /* Reading basic info */ 
 
-    unsigned char buffer[8]; // Buffer for the bits in the file + check
-    if (fread(buffer, 1, 8, file) != 8) {fclose(file); return NULL;} 
+    unsigned char buffer[4]; // Buffer for the bits in the file + check
+    if (fread(buffer, 1, 4, file) != 4) {fclose(file); return NULL;} 
     // Big-edian -> host
-    int32_t nb_nodes = ((int32_t)buffer[0] << 24) | ((int32_t)buffer[1] << 16) | ((int32_t)buffer[2] << 8) | buffer[3];
-    int32_t nb_edges = ((int32_t)buffer[4] << 24) | ((int32_t)buffer[5] << 16) | ((int32_t)buffer[6] << 8) | buffer[7];
+    int32_t nb_nodes = big_endian_to_int(buffer);
+    if (fread(buffer, 1, 4, file) != 4) {fclose(file); return NULL;}
+    int32_t nb_edges = big_endian_to_int(buffer);
 
     /* If the graph is not correctly formated we do not need to contiue */
     if (nb_nodes <= 1 || nb_edges <= 0){perror("Mal structuré");fclose(file); free(graph->file_infos);free(graph); return NULL;}
@@ -78,17 +137,19 @@ graph_t * get_file_info(FILE * file){
     for (int i = 0; i < nb_edges; i++){
     unsigned char buffer1[4]; // Buffer + checks for branches
     if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
-    graph->graph_data->node_from[i] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
+    graph->graph_data->node_from[i] = big_endian_to_int(buffer1);
+    
     // Check if it is a valid node
     if (graph->graph_data->node_from[i] < 0 || graph->graph_data->node_from[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
     
     if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
-    graph->graph_data->node_to[i] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
+    graph->graph_data->node_to[i] = big_endian_to_int(buffer1);
+    
     // Check if it is a valid node
     if (graph->graph_data->node_to[i] < 0 || graph->graph_data->node_to[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
     
     if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
-    graph->graph_data->cost[i] = ((int32_t)buffer1[0] << 24) | ((int32_t)buffer1[1] << 16) | ((int32_t)buffer1[2] << 8) | buffer1[3];
+    graph->graph_data->cost[i] = big_endian_to_int(buffer1);
     
 }
     fclose(file);
@@ -328,7 +389,7 @@ Output:
 0 if everything went well
 1 if there was an error
 */
-int write_to_file(FILE * file, file_data_t * file_infos, mcost_t * max, int32_t * size_path, int32_t * path){
+int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t * size_path, int32_t * path){
     /*
     First 4 bytes : source node
     Second 4 bytes : destination node
@@ -336,8 +397,46 @@ int write_to_file(FILE * file, file_data_t * file_infos, mcost_t * max, int32_t 
     Fourth 4 bytes : number of nodes in the path
     Rest of the bytes : the path
     */
+
+    // Convert the data to big endian format
+    uint8_t buffer0[4], buffer1[4],buffer2[4], buffer3[8];
+    int32_to_big_endian(source, buffer0);
+    int32_to_big_endian(max->node, buffer1);
+    int32_to_big_endian(max->cost, buffer2);
+    int64_to_big_endian(*size_path, buffer3);
     
-    
-    fclose(file);
+    // Write the data to the file
+    //source node
+    if (fwrite(buffer0, sizeof(uint8_t), 4, file) != 4) {
+        printf("Error: Failed to write source node.\n");
+        return 1;
+    }
+
+    //destination node
+    if (fwrite(buffer2, sizeof(uint8_t), 4, file) != 4) {
+        printf("Error: Failed to write destination node.\n");
+        return 1;
+    }
+
+    //cost
+    if (fwrite(buffer3, sizeof(uint8_t), 8, file) != 8) {
+        printf("Error: Failed to write cost.\n");
+        return 1;
+    }
+
+    //number of nodes in the path
+    if (fwrite(buffer3, sizeof(uint8_t), 4, file) != 4) {
+        printf("Error: Failed to write path size.\n");
+        return 1;
+    }
+    //path
+    for (int i = 0; i < *size_path; i++) {
+        int32_to_big_endian(path[i],buffer1);
+        if (fwrite(buffer1, sizeof(uint8_t), 4, file) != 4) {
+            printf("Error: Failed to write path element %d.\n", i);
+            return 1;
+        }
+    }
+
     return 0;
 }
