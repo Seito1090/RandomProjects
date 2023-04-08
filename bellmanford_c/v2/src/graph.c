@@ -389,61 +389,37 @@ Output:
 0 if everything went well
 1 if there was an error
 */
-int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t size_path, int32_t * path){
-    /*
-    First 4 bytes : source node
-    Second 4 bytes : destination node
-    Third 8 bytes : cost
-    Fourth 4 bytes : number of nodes in the path
-    Rest of the bytes : the path
-    */
-
-    // Convert the data to big endian format
-    uint8_t buffer0[4], buffer1[4],buffer2[4], buffer3[8];
-    int32_to_big_endian(source, buffer0);
-    int32_to_big_endian(max->node, buffer1);
-    int32_to_big_endian(max->cost, buffer2);
-    int64_to_big_endian(size_path, buffer3);
+int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t size_path, int32_t * path) {
+    // Convert source node to big endian format
+    uint32_t source_be = htonl(source);
     
-    // Write the data to the file
-    //source node
-    if (fwrite(buffer0, sizeof(uint8_t), 4, file) != 4) {
-        printf("Error: Failed to write source node.\n");
-        return 1;
-    }
-    printf("wrote source node (%s)\n", buffer0);
-
-    //destination node
-    if (fwrite(buffer1, sizeof(uint8_t), 4, file) != 4) {
-        printf("Error: Failed to write destination node.\n");
-        return 1;
-    }
-    printf("wrote destination node (%s)\n", buffer1);
-
-    //cost
-    if (fwrite(buffer2, sizeof(uint8_t), 8, file) != 8) {
-        printf("Error: Failed to write cost.\n");
-        return 1;
-    }
-    printf("wrote cost (%s)\n", buffer2);
-
-    //number of nodes in the path
-    if (fwrite(buffer3, sizeof(uint8_t), 4, file) != 4) {
-        printf("Error: Failed to write path size.\n");
-        return 1;
-    }
-    printf("wrote path size (%s)\n", buffer3);
+    // Convert destination node to big endian format
+    uint32_t dest_be = htonl(max->node);
     
-    //path
-    uint8_t buffer4[4];
-    for (int i = 0; i < size_path; i++) {
-        printf("path[%d]: %d\n", i, path[i]);
-        int32_to_big_endian(path[i],buffer4);
-        if (fwrite(buffer4, sizeof(uint8_t), 4, file) != 4) {
-            printf("Error: Failed to write path element %d.\n", i);
-            return 1;
-        }
+    // Convert cost to big endian format
+    uint64_t cost_ho = *(uint64_t*)&max->cost;
+    uint64_t cost_be = htobe64(cost_ho);
+    
+    // Convert size of path to big endian format
+    int32_t size_be = htonl(size_path);
+    
+    // Write source node to file
+    fwrite(&source_be, sizeof(source_be), 1, file);
+    
+    // Write destination node to file
+    fwrite(&dest_be, sizeof(dest_be), 1, file);
+    
+    // Write cost to file
+    fwrite(&cost_be, sizeof(cost_be), 1, file);
+    
+    // Write size of path to file
+    fwrite(&size_be, sizeof(size_be), 1, file);
+    
+    // Convert path nodes to big endian format and write to file
+    for(int i = 0; i < size_path; i++){
+        uint32_t node_be = htonl(path[i]);
+        fwrite(&node_be, sizeof(node_be), 1, file);
     }
-
-    return 0;
+    
+    return 0; // Everything went well
 }

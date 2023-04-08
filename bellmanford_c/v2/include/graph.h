@@ -8,6 +8,9 @@
 #include <string.h>
 #include <fcntl.h>
 #include <time.h>
+#include "../include/portable_endian.h"
+#include "../include/portable_semaphore.h"
+#include <arpa/inet.h>
 
 typedef struct branch{
     uint32_t * node_from;
