@@ -20,6 +20,14 @@ graph_t * get_file_info(FILE * file){
     // Create the structure in which the graph will be stored + checks
     graph_t* graph = malloc(sizeof(graph_t));
     if (graph == NULL) {fclose(file);perror("Could not allocate memory for the graph, free memory and try again");return NULL;};
+    fseek(file, 0, SEEK_END);
+    if (ftell(file) == 0) {
+        perror("File is empty");
+        free(graph);
+        fclose(file);
+        return NULL;
+    }
+    rewind(file);
     graph->file_infos = malloc(sizeof(file_data_t));
     if (graph->file_infos == NULL) {fclose(file);free(graph->graph_data);free(graph);
         perror("Could not allocate memory for file_infos, free memory and try again");return NULL;}
@@ -43,39 +51,43 @@ graph_t * get_file_info(FILE * file){
     int32_t nb_nodes = ((int32_t)buffer[0] << 24) | ((int32_t)buffer[1] << 16) | ((int32_t)buffer[2] << 8) | buffer[3];
     int32_t nb_edges = ((int32_t)buffer[4] << 24) | ((int32_t)buffer[5] << 16) | ((int32_t)buffer[6] << 8) | buffer[7];
 
-    /* If the graph is empty we do not need to contiue */
-    if (nb_nodes <= 0 || nb_edges <= 0){perror("Graph vide"); return NULL;}
-    
+    /* If the graph is not correctly formated we do not need to contiue */
+    if (nb_nodes <= 1 || nb_edges <= 0){perror("Mal structuré");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph); return NULL;}
     //------------------------------------------------------
 
     /* Reading the graph branches */
     
-    graph->graph_data = malloc(nb_edges * sizeof(branch_t));
+    graph->graph_data = (branch_t*)malloc(nb_edges * sizeof(branch_t));
     if (graph->graph_data == NULL) {fclose(file);free(graph);
         perror("Could not allocate memory for graph_data, free memory and try again");return NULL;}
     
-    graph->graph_data->cost = malloc(nb_edges * sizeof(int32_t));
+    graph->graph_data->cost = (int32_t*)malloc(nb_edges * sizeof(int32_t));
     if (graph->graph_data->cost == NULL) {fclose(file);free(graph);
         perror("Could not allocate memory for graph_data structure, free memory and try again");return NULL;}
 
-    graph->graph_data->node_from = malloc(nb_edges * sizeof(uint32_t));
+    graph->graph_data->node_from = (uint32_t*)malloc(nb_edges * sizeof(uint32_t));
     if (graph->graph_data->node_from == NULL) {fclose(file);free(graph);
         perror("Could not allocate memory for graph_data structure, free memory and try again");return NULL;}
     
-    graph->graph_data->node_to = malloc(nb_edges * sizeof(uint32_t));
+    graph->graph_data->node_to = (uint32_t*)malloc(nb_edges * sizeof(uint32_t));
     if (graph->graph_data->node_to == NULL) {fclose(file);free(graph);
         perror("Could not allocate memory for graph_data structure, free memory and try again");return NULL;}
     
     for (int i = 0; i < nb_edges; i++){
     unsigned char buffer1[4]; // Buffer + checks for branches
-    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
+    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
     graph->graph_data->node_from[i] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
-    if (graph->graph_data->node_from[i] < 0 || graph->graph_data->node_from[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data);return NULL;}
-    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
+    
+    if (graph->graph_data->node_from[i] < 0 || graph->graph_data->node_from[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
+    
+    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
     graph->graph_data->node_to[i] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
-    if (graph->graph_data->node_to[i] < 0 || graph->graph_data->node_to[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data);return NULL;}
-    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data);return NULL;}
+    
+    if (graph->graph_data->node_to[i] < 0 || graph->graph_data->node_to[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
+    
+    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
     graph->graph_data->cost[i] = ((int32_t)buffer1[0] << 24) | ((int32_t)buffer1[1] << 16) | ((int32_t)buffer1[2] << 8) | buffer1[3];
+    
 }
 
     fclose(file);
@@ -209,7 +221,7 @@ NULL + perror message if there was an error
 mcost_t * get_max(int32_t nb_nodes, int32_t * dist, uint32_t source){
     mcost_t * max = (mcost_t *)malloc(sizeof(mcost_t));
     if (max == NULL){perror("Could not allocate memory in the get_max function");return NULL;}
-    int64_t max_cost = (uint64_t)dist[source];
+    int64_t max_cost = (int64_t)dist[source];
     uint32_t max_node = source;
     for (int node_idx = 0; node_idx < nb_nodes; node_idx++){
         if (node_idx != source && dist[node_idx] != INT32_MAX && dist[node_idx] >= max_cost){
