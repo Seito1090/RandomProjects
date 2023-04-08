@@ -9,7 +9,7 @@ This structure contains, the number of edges and nodes that the graph but also t
 
 Input:
 ----------
-char* file_name : the name/location of the file
+char* file_name : the location/name of the file
 
 Output:
 ----------
