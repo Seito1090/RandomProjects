@@ -52,7 +52,7 @@ graph_t * get_file_info(FILE * file){
     int32_t nb_edges = ((int32_t)buffer[4] << 24) | ((int32_t)buffer[5] << 16) | ((int32_t)buffer[6] << 8) | buffer[7];
 
     /* If the graph is not correctly formated we do not need to contiue */
-    if (nb_nodes <= 1 || nb_edges <= 0){perror("Mal structuré");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph); return NULL;}
+    if (nb_nodes <= 1 || nb_edges <= 0){perror("Mal structuré");fclose(file); free(graph->file_infos);free(graph); return NULL;}
     //------------------------------------------------------
 
     /* Reading the graph branches */
