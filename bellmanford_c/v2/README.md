@@ -9,7 +9,7 @@ Il est base sur un code python qui nous a ete fourni
 
 ### Comment lancer le programme
 
-Il faut avoir les outils/librairies suivantes pour eviter tout soucis de compilation : CUnit et Python 
+Il faut avoir les outils/librairies suivantes pour eviter tout soucis de compilation : CUnit, Valgrind 
 
 Pour lancer le programme, il faut d'abord le compiler, voici quelques commandes utiles pour le faire :
  - **make** / **make sp** : Permet de compiler le programme de façon à ce qu'il puisse être utilise, cela cree un executable 'main' que vous pouvez executer, pour plus d'infos utiliser ./main -h
