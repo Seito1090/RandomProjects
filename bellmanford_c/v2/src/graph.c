@@ -20,31 +20,22 @@ graph_t * get_file_info(FILE * file){
     // Create the structure in which the graph will be stored + checks
     graph_t* graph = malloc(sizeof(graph_t));
     if (graph == NULL) {fclose(file);perror("Could not allocate memory for the graph, free memory and try again");return NULL;};
+
+    // Check if the file is empty
     fseek(file, 0, SEEK_END);
     if (ftell(file) == 0) {
         perror("File is empty");
         free(graph);
         fclose(file);
-        return NULL;
-    }
+        return NULL;}
     rewind(file);
+    // Initialize the structure for the basic info
     graph->file_infos = malloc(sizeof(file_data_t));
     if (graph->file_infos == NULL) {fclose(file);free(graph->graph_data);free(graph);
         perror("Could not allocate memory for file_infos, free memory and try again");return NULL;}
-    /* 
-    This works on Linux/ MacOs but not on windows 
-    TODO: make sure that it works on all things without issues probably just something to do with the header files, like declare what system it is and the use the corresponding headers 
-    */
-    // int32_t* nodes, edges;
-    // fread(&nodes, sizeof(int32_t), 1, file);
-    // fread(&edges, sizeof(int32_t), 1, file);
-    // graph->nodes_edges->nb_nodes = be32toh(nodes);
-    // graph->nodes_edges->nb_edges  = be32toh(edges);
     
-    /* Reading basic info done */ 
+    /* Reading basic info */ 
 
-    /* Failsafe method but slower ? */
-    
     unsigned char buffer[8]; // Buffer for the bits in the file + check
     if (fread(buffer, 1, 8, file) != 8) {fclose(file); return NULL;} 
     // Big-edian -> host
@@ -54,11 +45,17 @@ graph_t * get_file_info(FILE * file){
     /* If the graph is not correctly formated we do not need to contiue */
     if (nb_nodes <= 1 || nb_edges <= 0){perror("Mal structuré");fclose(file); free(graph->file_infos);free(graph); return NULL;}
     //------------------------------------------------------
+    
+    /* Reading basic info done */ 
 
     /* Reading the graph branches */
+    
+    // Check if the file is corrupted
     fseek(file, 0, SEEK_END);
     int32_t size = ftell(file);
     if (size != (nb_edges*12)+8) {perror("Corrompu");fclose(file); free(graph->file_infos);free(graph); return NULL;}
+    
+    // If not we continue and allocate memory for the graph data
     fseek(file, 8, SEEK_SET);
     graph->graph_data = (branch_t*)malloc(nb_edges * sizeof(branch_t));
     if (graph->graph_data == NULL) {fclose(file);free(graph);
@@ -76,23 +73,24 @@ graph_t * get_file_info(FILE * file){
     if (graph->graph_data->node_to == NULL) {fclose(file);free(graph);
         perror("Could not allocate memory for graph_data structure, free memory and try again");return NULL;}
     
+    // We read the file and store the data in the graph structure
+
     for (int i = 0; i < nb_edges; i++){
     unsigned char buffer1[4]; // Buffer + checks for branches
     if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
     graph->graph_data->node_from[i] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
-    
+    // Check if it is a valid node
     if (graph->graph_data->node_from[i] < 0 || graph->graph_data->node_from[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
     
     if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
     graph->graph_data->node_to[i] = ((uint32_t)buffer1[0] << 24) | ((uint32_t)buffer1[1] << 16) | ((uint32_t)buffer1[2] << 8) | buffer1[3];
-    
+    // Check if it is a valid node
     if (graph->graph_data->node_to[i] < 0 || graph->graph_data->node_to[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
     
     if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
     graph->graph_data->cost[i] = ((int32_t)buffer1[0] << 24) | ((int32_t)buffer1[1] << 16) | ((int32_t)buffer1[2] << 8) | buffer1[3];
     
 }
-
     fclose(file);
     graph->file_infos->nb_nodes = nb_nodes;
     graph->file_infos->nb_edges = nb_edges;
@@ -222,6 +220,7 @@ mcost_t * max : the structure that stores the node and cost
 NULL + perror message if there was an error
 */
 mcost_t * get_max(int32_t nb_nodes, int32_t * dist, uint32_t source){
+    //Code translated from python
     mcost_t * max = (mcost_t *)malloc(sizeof(mcost_t));
     if (max == NULL){perror("Could not allocate memory in the get_max function");return NULL;}
     int64_t max_cost = (int64_t)dist[source];
@@ -269,6 +268,7 @@ int32_t * the_path : the array with the path
 NULL + perror message if there was an error
 */
 int32_t* get_path(uint32_t dest, uint32_t source, int32_t* path, int32_t* size) {
+    // Initialize the path array
     int32_t* the_path = (int32_t*) calloc(*size, sizeof(int32_t));
     if (the_path == NULL) {
         perror("Could not allocate memory in the get_path function");
@@ -284,6 +284,7 @@ int32_t* get_path(uint32_t dest, uint32_t source, int32_t* path, int32_t* size) 
         i = path[i];
     }
 
+    // Add the source node to the path as the last element + get the size of the path
     the_path[the_path_indx++] = source;
     *size = the_path_indx;
 

@@ -25,6 +25,10 @@ La fonction main prend comme arguments :
  - *-v* : Affichage des messages d'erreur, false par defaut
  - *-f* : Le fichier dans lequel les donnee seront sauvegardees
  - *-?* / *-h* : Affiche une fenetre avec cette explication 
+ - Le nom du fichier avec le graph
 
 ### Utilisation de graph personnels
 
+Ce projet vous permet de créer votre propre graphe et d'executer le programme sur ce graph. Vous avez 2 possibilites pour le faire :
+ - Vous avez deja votre fichier binaire ? Pas de soucis vous n'avez qu'a executer le programme avec le chemin vers votre fichier comme parametre !
+ - Si vous n'avez pas de fichier binaire ? Vous pouvez utiliser le code python qui a ete fourni pour en creer un ! Vous autrez besoin de rentrer votre graph dans un fichier ntf avec une structure : *node_from node_to cost* (voir les exemples dans le dossier tests/ntf_files) et ensuite executer le code python avec la ligne suivante : python tests/necessary_python/create_graph.py *chemin vers fichier*. Une fois fait executer le programme main normalement.

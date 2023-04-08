@@ -1,0 +1,9 @@
+/* 
+    This works on Linux/ MacOs but not on windows 
+    TODO: make sure that it works on all things without issues probably just something to do with the header files, like declare what system it is and the use the corresponding headers 
+    */
+    // int32_t* nodes, edges;
+    // fread(&nodes, sizeof(int32_t), 1, file);
+    // fread(&edges, sizeof(int32_t), 1, file);
+    // graph->nodes_edges->nb_nodes = be32toh(nodes);
+    // graph->nodes_edges->nb_edges  = be32toh(edges);

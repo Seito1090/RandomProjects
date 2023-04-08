@@ -35,21 +35,57 @@ typedef struct mcost{
     uint32_t node;
 } mcost_t;
 
+/*
+This file contains all the functions used to read the file and to create the graph as well as a short description of each function.
+For more information about the functions, please refer to the file graph.c
+*/
 
+/*
+Function : get_file_info
+Description : This function reads the file and returns the number of nodes and edges as well as the graph stored in the file.
+*/
 graph_t * get_file_info(FILE * file);
 
+/*
+Function : free_graph_struct
+Used to free the memory allocated for the graph structure.
+*/
 void free_graph_struct(graph_t* graph);
 
+/*
+Function : bellman_ford
+Description : This function implements the Bellman-Ford algorithm. It returns the shortest path from the source to each node.
+*/
 ford_t* bellman_ford(uint32_t nb_nodes, uint32_t nb_edges, branch_t* links, uint32_t source, bool verbose);
 
+/*
+Function : free_ford_struct
+Used to free the memory allocated for the ford structure.
+*/
 void free_ford_struct(ford_t * ford);
 
+/*
+Function : get_max
+Description : This function returns the maximum cost of the shortest path from the source to each node.
+*/
 mcost_t * get_max(int32_t nb_nodes, int32_t * dist, uint32_t source);
 
+/*
+Function : free_max_struct
+Used to free the memory allocated for the mcost structure.
+*/
 void free_max_struct(mcost_t * mcost);
 
+/*
+Function : get_path
+Description : This function returns the shortest path from the source to the destination.
+*/
 int32_t * get_path(uint32_t dest, uint32_t source, int32_t* path, int32_t* size);
 
+/*
+Function : free_path
+Used to free the memory allocated for the path.
+*/
 void free_path(int32_t * path);
 
 #endif // LEPL1503__GRAPH__
