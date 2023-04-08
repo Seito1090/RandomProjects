@@ -309,3 +309,35 @@ void free_path(int32_t * path){
     free(path);
 }
 //---------------------------------------------------------------------------------------------------------
+
+/*
+Function write_to_file
+-------------------------------------
+This function writes the data to the file in big edian binary format
+
+Input:
+----------
+FILE * file : the file pointer
+file_data_t * file_data : the structure that stores the data from the file
+mcost_t * max : the structure that stores the node and cost
+int32_t * size_path : pointer that keeps track of the lenght of the path
+int32_t * path : the array with the path
+
+Output:
+----------
+0 if everything went well
+1 if there was an error
+*/
+int write_to_file(FILE * file, file_data_t * file_infos, mcost_t * max, int32_t * size_path, int32_t * path){
+    /*
+    First 4 bytes : source node
+    Second 4 bytes : destination node
+    Third 8 bytes : cost
+    Fourth 4 bytes : number of nodes in the path
+    Rest of the bytes : the path
+    */
+    
+    
+    fclose(file);
+    return 0;
+}
