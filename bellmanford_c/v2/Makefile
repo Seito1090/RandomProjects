@@ -14,7 +14,7 @@ sp: src/graph.o sp.c
 clean:
 	rm -f src/*.o
 	rm -f main
-	rm -f tests/CUnit/*.o
+	rm -f tests/*.o
 	rm -f tests/graph_bin/graph*
 	rm -f tests/result_bin/result*
 	# ...
@@ -32,9 +32,9 @@ tests:
 	python tests/necessary_python/sp.py tests/graph_bin/graph_neg.bin -f tests/result_bin/result_neg.bin
 
 # 	Do not forget the -lcunit flag
-	cd tests/CUnit
-#	./tests
-	cd ../..
+	cd tests
+	ls
+	cd ../
 	
 # a .PHONY target forces make to execute the command even if the target already exists
 .PHONY: clean tests
