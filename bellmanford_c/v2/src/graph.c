@@ -389,7 +389,7 @@ Output:
 0 if everything went well
 1 if there was an error
 */
-int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t * size_path, int32_t * path){
+int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t size_path, int32_t * path){
     /*
     First 4 bytes : source node
     Second 4 bytes : destination node
@@ -403,7 +403,7 @@ int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t * size_pa
     int32_to_big_endian(source, buffer0);
     int32_to_big_endian(max->node, buffer1);
     int32_to_big_endian(max->cost, buffer2);
-    int64_to_big_endian(*size_path, buffer3);
+    int64_to_big_endian(size_path, buffer3);
     
     // Write the data to the file
     //source node
@@ -430,7 +430,7 @@ int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t * size_pa
         return 1;
     }
     //path
-    for (int i = 0; i < *size_path; i++) {
+    for (int i = 0; i < size_path; i++) {
         int32_to_big_endian(path[i],buffer1);
         if (fwrite(buffer1, sizeof(uint8_t), 4, file) != 4) {
             printf("Error: Failed to write path element %d.\n", i);

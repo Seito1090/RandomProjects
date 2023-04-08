@@ -113,6 +113,6 @@ void free_path(int32_t * path);
 Function : write_to_file
 Description : This function writes the results in the output file.
 */
-int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t * size_path, int32_t * path);
+int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t size_path, int32_t * path);
 
 #endif // LEPL1503__GRAPH__
