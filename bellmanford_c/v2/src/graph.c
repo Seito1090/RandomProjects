@@ -400,9 +400,13 @@ int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t size_path
 
     // Convert the data to big endian format
     uint8_t buffer0[4], buffer1[4],buffer2[4], buffer3[8];
+    printf("source: %d\n", source);
     int32_to_big_endian(source, buffer0);
+    printf("max->node: %d\n", max->node);
     int32_to_big_endian(max->node, buffer1);
+    printf("max->cost: %ld\n", max->cost);
     int32_to_big_endian(max->cost, buffer2);
+    printf("size_path: %d\n", size_path);
     int64_to_big_endian(size_path, buffer3);
     
     // Write the data to the file
@@ -431,6 +435,7 @@ int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t size_path
     }
     //path
     for (int i = 0; i < size_path; i++) {
+        printf("path[%d]: %d\n", i, path[i]);
         int32_to_big_endian(path[i],buffer1);
         if (fwrite(buffer1, sizeof(uint8_t), 4, file) != 4) {
             printf("Error: Failed to write path element %d.\n", i);

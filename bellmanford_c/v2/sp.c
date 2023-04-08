@@ -137,7 +137,6 @@ int main(int argc, char *argv[]) {
             write_to_file(args.output_stream, source, max, size, path);
             free_path(path);
             free_max_struct(max);
-            free_ford_struct(result);
         }else{
             printf("source node : %u\nDistances : [", source);
             for (int i = 0; i < graph->file_infos->nb_nodes; i++){
@@ -155,8 +154,8 @@ int main(int argc, char *argv[]) {
             printf("\n");
             free_path(path);
             free_max_struct(max);
-            free_ford_struct(result);
         }
+        free_ford_struct(result);
         
     }
     free_graph_struct(graph);
