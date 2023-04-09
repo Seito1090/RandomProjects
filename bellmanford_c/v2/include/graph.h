@@ -50,21 +50,6 @@ Description : This function converts big endian to u    int32_t.
 uint32_t big_endian_to_int(unsigned char *buffer);
 
 /*
-Function : int32_to_big_endian
-Description : This function converts uint32_t to big endian.
-*/
-void int32_to_big_endian(uint32_t value, unsigned char *buffer);
-
-/* 
-Function : int64_to_big_endian
-Description : This function converts int64_t to big endian.
-*/
-void int64_to_big_endian(int64_t value, unsigned char *buffer);
-
-//Those 3 functions are used only for consistency purposes, this way it can work on linux, windows and macos without having to play with headers 
-//------------------------------------------------------------
-
-/*
 Function : get_file_info
 Description : This function reads the file and returns the number of nodes and edges as well as the graph stored in the file.
 */

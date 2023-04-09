@@ -18,45 +18,7 @@ uint32_t big_endian_to_int(unsigned char *buffer) {
     return ((uint32_t)buffer[0] << 24) | ((uint32_t)buffer[1] << 16) | ((uint32_t)buffer[2] << 8) | buffer[3];
 }
 
-/*
-Function int32_to_big_endian
--------------------------------------
 
-Function that converts uint32_t to big endian
-
-Input:
-----------
-uint32_t value : the value to convert
-unsigned char *buffer : the buffer in which the converted value will be stored
-*/
-void int32_to_big_endian(uint32_t value, unsigned char *buffer) {
-    buffer[0] = (value >> 24) & 0xFF;
-    buffer[1] = (value >> 16) & 0xFF;
-    buffer[2] = (value >> 8) & 0xFF;
-    buffer[3] = value & 0xFF;
-}
-
-/*
-Function int64_to_big_endian
--------------------------------------
-
-Function that converts int64_t to big endian
-
-Input:
-----------
-int64_t value : the value to convert
-unsigned char *buffer : the buffer in which the converted value will be stored
-*/
-void int64_to_big_endian(int64_t value, unsigned char *buffer) {
-    buffer[0] = (value >> 56) & 0xff;
-    buffer[1] = (value >> 48) & 0xff;
-    buffer[2] = (value >> 40) & 0xff;
-    buffer[3] = (value >> 32) & 0xff;
-    buffer[4] = (value >> 24) & 0xff;
-    buffer[5] = (value >> 16) & 0xff;
-    buffer[6] = (value >> 8) & 0xff;
-    buffer[7] = value & 0xff;
-}
 
 /*
 Function get_file_info
@@ -397,7 +359,8 @@ int write_to_file(FILE * file, uint32_t source, mcost_t * max, int32_t size_path
     uint32_t dest_be = htonl(max->node);
     
     // Convert cost to big endian format
-    uint64_t cost_ho = *(uint64_t*)&max->cost;
+    int64_t cost_ho;
+    memcpy(&cost_ho, &(max->cost), sizeof(double));
     uint64_t cost_be = htobe64(cost_ho);
     
     // Convert size of path to big endian format

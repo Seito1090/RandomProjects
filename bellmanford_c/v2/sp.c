@@ -125,9 +125,8 @@ int main(int argc, char *argv[]) {
     graph_t * graph = get_file_info(args.input_file);
     if (graph == NULL) {fprintf(stderr, "Error while creating the graph"); return 1;}
     if (args.output_stream != stdout){
-        uint8_t buffer0[4];
-        int32_to_big_endian(graph->file_infos->nb_nodes, buffer0);
-        if (fwrite(buffer0, sizeof(uint8_t), 4, args.output_stream) != 4) {
+        uint32_t nb_nodes_be = htonl(graph->file_infos->nb_nodes);
+        if (fwrite(&nb_nodes_be, sizeof(uint32_t), 1, args.output_stream) != 1) {
             printf("Error: Failed to write source node.\n");
             return 1;
         }

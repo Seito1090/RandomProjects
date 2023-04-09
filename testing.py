@@ -145,5 +145,5 @@ def read_binary_file(file_path1, file_path2):
             # Print the integer value
             print("val py : ", value1 ," val c : " , value2)
 
-read_binary_file("bellmanford_c/v2/outputpy","bellmanford_c/v2/output")
-#print(files_are_equal("bellmanford_c/v2/output", "bellmanford_c/v2/outputpy"))
+read_binary_file("bellmanford_c/v2/tests/output_tests/neg_py.bin","bellmanford_c/v2/tests/output_tests/neg_c.bin")
+print(files_are_equal("bellmanford_c/v2/tests/output_tests/neg_c.bin", "bellmanford_c/v2/tests/output_tests/neg_py.bin"))

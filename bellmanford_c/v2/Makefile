@@ -17,7 +17,7 @@ clean:
 	rm -f tests/cunit_tests
 	# ...
 
-tests: src/graph.o tests/cunit.c
+tests: src/graph.o tests/cunittests.c
 	   $(CC) $(INCLUDE_HEADERS_DIRECTORY) $(CFLAGS) -o tests/cunit_tests $^ $(LIBS)
 # run them to show they at least compile lol
 	   ./tests/cunit_tests

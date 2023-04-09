@@ -7,9 +7,9 @@ Here are contained the tests to make sure the functions impelemented in the grap
 #include <stdlib.h>
 #include <string.h>
 #include "../include/graph.h"
+#include "../include/cunittests.h"
 
 // Test Suite setup and cleanup functions:
-//TODO: Add tests for cases where the graph is not connected
 
 void test_default(void){
     printf("Default test start\n");
@@ -189,7 +189,58 @@ void test_only_zeros(void){
     printf("Test only zeros passed\n");
 }
 
+int check_binary_files_equal(const char* filename1, const char* filename2) {
+    FILE* file1 = fopen(filename1, "rb");
+    if (!file1) {
+        printf("Error: Failed to open file %s\n", filename1);
+        return 1;
+    }
 
+    FILE* file2 = fopen(filename2, "rb");
+    if (!file2) {
+        printf("Error: Failed to open file %s\n", filename2);
+        fclose(file1);
+        return 1;
+    }
+
+    int is_equal = 1;
+    uint8_t byte1, byte2;
+    while (1) {
+        byte1 = fgetc(file1);
+        byte2 = fgetc(file2);
+        if (byte1 != byte2) {
+            is_equal = 0;
+            break;
+        }
+        if (feof(file1) && feof(file2)) {
+            break;
+        }
+        if (feof(file1) || feof(file2)) {
+            is_equal = 0;
+            break;
+        }
+    }
+
+    if (!is_equal) {
+        printf("The files %s and %s are not equal\n", filename1, filename2);
+        fclose(file1);
+        fclose(file2);
+        return 1;
+    }
+
+    fclose(file1);
+    fclose(file2);
+
+    printf("The files %s and %s are equal\n", filename1, filename2);
+    return 0;
+}
+
+void test_check_binary_files_equal(void) {
+    CU_ASSERT_EQUAL(check_binary_files_equal("tests/output_tests/default_py.bin", "tests/output_tests/default_c.bin"), 0);
+    CU_ASSERT_EQUAL(check_binary_files_equal("tests/output_tests/neg_py.bin", "tests/output_tests/neg_c.bin"), 0);
+    CU_ASSERT_EQUAL(check_binary_files_equal("tests/output_tests/wrong_py.bin", "tests/output_tests/default_c.bin"), 1);
+    CU_ASSERT_EQUAL(check_binary_files_equal("tests/output_tests/non_existent_file.bin", "tests/output_tests/default_c.bin"), 1);
+}
 
 int main(){
     if (CUE_SUCCESS != CU_initialize_registry())
@@ -204,7 +255,8 @@ int main(){
         (NULL == CU_add_test(pSuite, "test of graph with negative cost", test_negative_cost)) ||
         (NULL == CU_add_test(pSuite, "test of empty graph", test_empty)) ||
         (NULL == CU_add_test(pSuite, "test of corrupted graph", test_corrupted)) ||
-        (NULL == CU_add_test(pSuite, "test of full zeros graph", test_only_zeros)) 
+        (NULL == CU_add_test(pSuite, "test of full zeros graph", test_only_zeros)) || 
+        (NULL == CU_add_test(pSuite, "test of binary output files", test_check_binary_files_equal))
         ){
         CU_cleanup_registry();
         return CU_get_error();
