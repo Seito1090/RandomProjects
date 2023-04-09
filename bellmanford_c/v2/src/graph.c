@@ -97,23 +97,23 @@ graph_t * get_file_info(FILE * file){
     // We read the file and store the data in the graph structure
 
     for (int i = 0; i < nb_edges; i++){
-    unsigned char buffer1[4]; // Buffer + checks for branches
-    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
-    graph->graph_data->node_from[i] = big_endian_to_int(buffer1);
-    
-    // Check if it is a valid node
-    if (graph->graph_data->node_from[i] < 0 || graph->graph_data->node_from[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
-    
-    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
-    graph->graph_data->node_to[i] = big_endian_to_int(buffer1);
-    
-    // Check if it is a valid node
-    if (graph->graph_data->node_to[i] < 0 || graph->graph_data->node_to[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
-    
-    if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
-    graph->graph_data->cost[i] = big_endian_to_int(buffer1);
-    
-}
+        unsigned char buffer1[4]; // Buffer + checks for branches
+        if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
+        graph->graph_data->node_from[i] = big_endian_to_int(buffer1);
+        
+        // Check if it is a valid node
+        if (graph->graph_data->node_from[i] < 0 || graph->graph_data->node_from[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
+        
+        if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
+        graph->graph_data->node_to[i] = big_endian_to_int(buffer1);
+        
+        // Check if it is a valid node
+        if (graph->graph_data->node_to[i] < 0 || graph->graph_data->node_to[i] >= nb_nodes) {perror("Wrong format of the input file");fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
+        
+        if (fread(buffer1, 1, 4, file) != 4) {fclose(file);free(graph->graph_data); free(graph->file_infos);free(graph);return NULL;}
+        graph->graph_data->cost[i] = big_endian_to_int(buffer1);
+        
+    }
     fclose(file);
     graph->file_infos->nb_nodes = nb_nodes;
     graph->file_infos->nb_edges = nb_edges;
