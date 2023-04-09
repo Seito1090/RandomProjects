@@ -7,10 +7,14 @@ Here are contained the tests to make sure the functions impelemented in the grap
 #include <stdlib.h>
 #include <string.h>
 #include "../include/graph.h"
-#include "../include/cunittests.h"
 
 // Test Suite setup and cleanup functions:
 
+/*
+Function test_default
+--------------------------------
+Tests the code with the default graph, 5 nodes, 10 links, seed 42
+*/
 void test_default(void){
     /*Tests the code with the default graph, 5 nodes, 10 links, seed 42*/
     FILE * default_file = fopen("tests/graph_bin/default.bin", "rb");
@@ -82,6 +86,11 @@ void test_default(void){
     free_graph_struct(default_graph);
 }
 
+/*
+Function test_negative_cost
+--------------------------------
+Tests the code with the negative cost graph, 3 nodes, 4 links, seed 42
+*/
 void test_negative_cost(void){
     FILE * neg_test = fopen("tests/graph_bin/neg_cost.bin", "rb");
     if (neg_test == NULL){
@@ -149,6 +158,11 @@ void test_negative_cost(void){
     free_graph_struct(neg_graph);
 }
 
+/*
+Function test_empty
+--------------------------------
+Tests the code with an edge case, an empty graph
+*/
 void test_empty(void){
     FILE * empty_test = fopen("tests/graph_bin/empty.bin", "rb");
     if (empty_test == NULL){printf("empty_test get file info"); exit(1);}
@@ -159,6 +173,11 @@ void test_empty(void){
     
 }
 
+/*
+Function test_corrupted
+--------------------------------
+Tests the code with an edge case, a corrupted graph
+*/
 void test_corrupted(void){
     FILE * corrupted_test = fopen("tests/graph_bin/corrupted.bin", "rb");
     if (corrupted_test == NULL){printf("corrupted_test get file info"); exit(1);}
@@ -168,6 +187,11 @@ void test_corrupted(void){
     CU_ASSERT_EQUAL(corrupted_graph, NULL);
 }
 
+/*
+Function test_only_zeros
+--------------------------------
+Tests the code with an edge case, a graph with only zeros
+*/
 void test_only_zeros(void){
     FILE * zero_test = fopen("tests/graph_bin/zeros.bin", "rb");
     if (zero_test == NULL){
@@ -179,6 +203,20 @@ void test_only_zeros(void){
     CU_ASSERT_EQUAL(zero_graph, NULL);
 }
 
+/*
+Function check_binary_files_equal
+--------------------------------
+This function checks if two binary files are equal
+
+Input:
+---------
+const char* filename1: The name of the first file
+const char* filename2: The name of the second file
+
+Output:
+---------
+int: 0 if the files are equal, 1 otherwise
+*/
 int check_binary_files_equal(const char* filename1, const char* filename2) {
     FILE* file1 = fopen(filename1, "rb");
     if (!file1) {
@@ -225,6 +263,11 @@ int check_binary_files_equal(const char* filename1, const char* filename2) {
     return 0;
 }
 
+/*
+Function test_check_binary_files_equal
+--------------------------------
+This function tests cases for the check_binary_files_equal function
+*/
 void test_check_binary_files_equal(void) {
     CU_ASSERT_EQUAL(check_binary_files_equal("tests/output_tests/default_py.bin", "tests/output_tests/default_c.bin"), 0);
     CU_ASSERT_EQUAL(check_binary_files_equal("tests/output_tests/neg_py.bin", "tests/output_tests/neg_c.bin"), 0);
