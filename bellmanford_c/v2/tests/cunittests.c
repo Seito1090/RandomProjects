@@ -12,7 +12,6 @@ Here are contained the tests to make sure the functions impelemented in the grap
 // Test Suite setup and cleanup functions:
 
 void test_default(void){
-    printf("Default test start\n");
     /*Tests the code with the default graph, 5 nodes, 10 links, seed 42*/
     FILE * default_file = fopen("tests/graph_bin/default.bin", "rb");
     if (default_file == NULL){printf("default_test get file info"); exit(1);}
@@ -81,11 +80,9 @@ void test_default(void){
     free_max_struct(max_node_2);
     free_ford_struct(result_node_2);
     free_graph_struct(default_graph);
-    printf("Default test passed\n");
 }
 
 void test_negative_cost(void){
-    printf("Negative cost test start\n");
     FILE * neg_test = fopen("tests/graph_bin/neg_cost.bin", "rb");
     if (neg_test == NULL){
         printf("Error opening file");
@@ -150,8 +147,6 @@ void test_negative_cost(void){
     free_ford_struct(result_neg_node_2);
     free_ford_struct(result_neg_node_0);
     free_graph_struct(neg_graph);
-
-    printf("Negative graph tests passed\n");
 }
 
 void test_empty(void){
@@ -171,12 +166,9 @@ void test_corrupted(void){
     graph_t * corrupted_graph = get_file_info(corrupted_test);
 
     CU_ASSERT_EQUAL(corrupted_graph, NULL);
-    
-
 }
 
 void test_only_zeros(void){
-    printf("Test only zeros start\n");
     FILE * zero_test = fopen("tests/graph_bin/zeros.bin", "rb");
     if (zero_test == NULL){
         printf("Error opening file zero_test");
@@ -185,8 +177,6 @@ void test_only_zeros(void){
     graph_t * zero_graph = get_file_info(zero_test);
 
     CU_ASSERT_EQUAL(zero_graph, NULL);
-    
-    printf("Test only zeros passed\n");
 }
 
 int check_binary_files_equal(const char* filename1, const char* filename2) {
@@ -222,7 +212,7 @@ int check_binary_files_equal(const char* filename1, const char* filename2) {
     }
 
     if (!is_equal) {
-        printf("The files %s and %s are not equal\n", filename1, filename2);
+        printf("The files are not equal\n");
         fclose(file1);
         fclose(file2);
         return 1;
@@ -231,7 +221,7 @@ int check_binary_files_equal(const char* filename1, const char* filename2) {
     fclose(file1);
     fclose(file2);
 
-    printf("The files %s and %s are equal\n", filename1, filename2);
+    printf("The files are equal\n");
     return 0;
 }
 
@@ -242,7 +232,7 @@ void test_check_binary_files_equal(void) {
     CU_ASSERT_EQUAL(check_binary_files_equal("tests/output_tests/non_existent_file.bin", "tests/output_tests/default_c.bin"), 1);
 }
 
-int main(){
+int main(int argc, char **argv){
     if (CUE_SUCCESS != CU_initialize_registry())
         return CU_get_error();
     CU_pSuite pSuite = NULL;
@@ -251,17 +241,22 @@ int main(){
         CU_cleanup_registry();
         return CU_get_error();
     }
-    if ((NULL == CU_add_test(pSuite, "test of default graph", test_default)) ||
-        (NULL == CU_add_test(pSuite, "test of graph with negative cost", test_negative_cost)) ||
-        (NULL == CU_add_test(pSuite, "test of empty graph", test_empty)) ||
-        (NULL == CU_add_test(pSuite, "test of corrupted graph", test_corrupted)) ||
-        (NULL == CU_add_test(pSuite, "test of full zeros graph", test_only_zeros)) || 
-        (NULL == CU_add_test(pSuite, "test of binary output files", test_check_binary_files_equal))
-        ){
-        CU_cleanup_registry();
-        return CU_get_error();
+    if (argc > 1){
+        printf("Test de correspondance d'un graph personalise\n"); 
+        check_binary_files_equal(argv[1], argv[2]); 
+    } else {
+        if ((NULL == CU_add_test(pSuite, "test of default graph", test_default)) ||
+            (NULL == CU_add_test(pSuite, "test of graph with negative cost", test_negative_cost)) ||
+            (NULL == CU_add_test(pSuite, "test of empty graph", test_empty)) ||
+            (NULL == CU_add_test(pSuite, "test of corrupted graph", test_corrupted)) ||
+            (NULL == CU_add_test(pSuite, "test of full zeros graph", test_only_zeros)) || 
+            (NULL == CU_add_test(pSuite, "test of binary output files", test_check_binary_files_equal))
+            ){
+            CU_cleanup_registry();
+            return CU_get_error();
+        }
+        CU_basic_run_tests();
+        CU_basic_show_failures(CU_get_failure_list());
     }
-    CU_basic_run_tests();
-    CU_basic_show_failures(CU_get_failure_list());
     CU_cleanup_registry();
 }
