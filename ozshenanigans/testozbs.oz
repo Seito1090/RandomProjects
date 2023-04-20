@@ -29,18 +29,14 @@ define
         [] H|T then  {ReadFileMultiThread T {ReadFileThread H}|ThreadList}
         end
     end
-    fun {GetFileNames L Acc} 
+    fun {ListFiles L Dir Acc}
         case L of nil then Acc
-        [] H|T then {GetFileNames T {String.toAtom H}|Acc}
+        [] H|T then {ListFiles T Dir Dir#{String.toAtom H}|Acc}
         end
-    end
-    fun {ListAllFiles L Acc}
-        case L of nil then skip
-        [] H|T then {ListAllFiles T {String.toAtom H}|Acc}
-        end
-        Acc
     end
 
-    %{Browse {ReadFileMultiThread ["tweets/part_1.txt" "tweets/part_2.txt"] nil}}
-    {Browse {ListAllFiles {OS.getDir 'tweets'} nil}}
+    {Browse {ReadFileMultiThread ["tweets/part_1.txt" "tweets/part_2.txt"] nil}}
+    %FileNames = {ListFiles {OS.getDir 'tweets'} 'tweets/' nil}
+    %Data = {ReadFileMultiThread FileNames nil}
+    %{Browse Data}
 end
