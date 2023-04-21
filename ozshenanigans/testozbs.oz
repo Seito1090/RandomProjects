@@ -64,7 +64,7 @@ define
     end 
 
     fun {ReadData Dir NGram} 
-        Z Quicktable FusedHash H1 in 
+        Z Quicktable FusedHash in 
         thread %this thread goes on and creates new threads that worl on the files in the directory  
             FusedHash = {SubProducer Dir nil NGram}
             Z = {StringParsing.countHashesFromTable FusedHash}
