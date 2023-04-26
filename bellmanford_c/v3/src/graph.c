@@ -135,7 +135,7 @@ void free_graph_struct(graph_t* graph){
     free(graph);
 }
 //---------------------------------------------------------------------------------------------------------
-
+//TODO: Split bellman_Ford so that it can do 1 iteration on a specific node, for later multithreading
 /*
 Function bellman_ford
 -------------------------------------

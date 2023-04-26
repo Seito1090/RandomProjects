@@ -82,9 +82,6 @@ int parse_args(args_t *args, int argc, char *argv[]) {
             case 'h':
                 usage(argv[0]);
                 return 1;
-            case 't':
-                args->exec_time = true;
-                return 1;
             default:
                 usage(argv[0]);
                 return -1;
@@ -109,10 +106,6 @@ int parse_args(args_t *args, int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-    // This bit is only for checking the execution time 
-    clock_t start, end;
-    double execution_time;
-    start = clock();
 
     /*Part that was given to us in the example code*/
     args_t args;
@@ -176,9 +169,5 @@ int main(int argc, char *argv[]) {
     if (args.output_stream != stdout){
         fclose(args.output_stream);
     }
-
-    end = clock();
-    execution_time = ((double) (end - start)) / CLOCKS_PER_SEC;
-    if (args.exec_time){printf("Execution time : %fs\n", execution_time);}
     return 0;
 }
