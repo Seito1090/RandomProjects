@@ -106,7 +106,6 @@ int parse_args(args_t *args, int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-
     /*Part that was given to us in the example code*/
     args_t args;
     int err = parse_args(&args, argc, argv);

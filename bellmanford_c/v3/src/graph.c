@@ -18,8 +18,6 @@ uint32_t big_endian_to_int(unsigned char *buffer) {
     return ((uint32_t)buffer[0] << 24) | ((uint32_t)buffer[1] << 16) | ((uint32_t)buffer[2] << 8) | buffer[3];
 }
 
-
-
 /*
 Function get_file_info
 -------------------------------------
@@ -135,7 +133,7 @@ void free_graph_struct(graph_t* graph){
     free(graph);
 }
 //---------------------------------------------------------------------------------------------------------
-//TODO: Split bellman_Ford so that it can do 1 iteration on a specific node, for later multithreading
+
 /*
 Function bellman_ford
 -------------------------------------
@@ -155,7 +153,7 @@ Output:
 ford_t * ford_links : structure that keeps track of distances between the source and each other node, the path between the source and the other nodes 
 NULL + perror message if there was an error
 */
-ford_t* bellman_ford(uint32_t nb_nodes, uint32_t nb_edges, branch_t * links, uint32_t s, bool verbose){
+ford_t* bellman_ford(uint32_t nb_nodes, uint32_t nb_edges, branch_t * links, uint32_t source, bool verbose){
     // Initialization
     ford_t* ford_links = (ford_t*)malloc(sizeof(ford_t)); 
     if (ford_links == NULL){perror("Erreur d'allocation de mémoire pour la structure de bellman_ford"); return NULL;}
@@ -168,7 +166,7 @@ ford_t* bellman_ford(uint32_t nb_nodes, uint32_t nb_edges, branch_t * links, uin
         distances[i] = INT32_MAX;
         paths[i] = -1;
     }
-    distances[s] = 0;
+    distances[source] = 0;
     
     // Main loop for belman ford
     for (int i = 0; i < nb_nodes-1; i++) {
@@ -320,7 +318,6 @@ int32_t* get_path(uint32_t dest, uint32_t source, int32_t* path, int32_t* size) 
 
     return the_path;
 }
-
 
 /*
 Function free_path

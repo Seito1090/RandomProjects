@@ -11,6 +11,7 @@
 #include "../include/portable_endian.h"
 #include "../include/portable_semaphore.h"
 #include <arpa/inet.h>
+#include <pthread.h>
 
 typedef struct branch{
     uint32_t * node_from;
