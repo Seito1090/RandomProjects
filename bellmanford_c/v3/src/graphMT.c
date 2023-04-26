@@ -1,11 +1,11 @@
 #include "../include/graph.h"
-#define NTHREADS 4
+#define NTHREADS 12
 
 int inputbuffer[NTHREADS-2];
 int outputbuffer[NTHREADS-2];
 int inputbuffer_index = 0;
 int outputbuffer_index = 0;
-
+graph_t * graph;
 int inputbuffer_empty(){
     return inputbuffer_index == 0;
 }
@@ -38,9 +38,16 @@ int popFromOutputBuffer(){
 }
 void* graphproducer(void *arg){
     /*This function reads the file, produces the graph structure and fills the input buffer for other threads to read from*/
+
 }
 void* graphcomputer(void *arg){
     /*This function reads from the input buffer, computes the shortest path and fills the output buffer for the last thread to read from*/
+    unsigned int *source;
+    source = (unsigned int *)arg[0];
+    bool* verbose;
+    verbose = (bool *)arg[1];
+    ford_t * result = bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, *source, *verbose);
+    
 }
 void* graphwriter(void *arg){
     /*This function reads from the output buffer and writes the result to the file*/
