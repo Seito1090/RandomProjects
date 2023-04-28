@@ -2,6 +2,7 @@ CC=gcc
 CFLAGS=-Wall -Werror -g
 LIBS=-lcunit -lpthread
 INCLUDE_HEADERS_DIRECTORY=-Iinclude
+SHELL := /bin/bash
 
 help:
 	@echo "+------------------------------------------------------------------------------------+"
@@ -25,11 +26,14 @@ run:
 	@./main tests/graph_bin/default.bin
 
 time:
-#TODO: run the main with time ./main ... to get the time :)
+	@make -s sp
+	@echo "Running the program with the default graph"
+	@time ./main tests/graph_bin/default.bin
 
 clean:
 	@rm -f src/*.o
 	@rm -f main
+	@rm -f graphMT
 	@rm -f tests/*.o
 	@rm -f tests/cunit_tests
 	@rm -f my*.bin
@@ -64,6 +68,9 @@ myfile:
 	./main tests/graph_bin/$$FileName.bin -f myFileOut.bin; \
 	echo "Done";
 
+mt:	src/graph.o src/graphMT.c 
+	$(CC) $(INCLUDE_HEADERS_DIRECTORY) $(CFLAGS) -o graphMT $^ 
+
 # a .PHONY target forces make to execute the command even if the target already exists
-.PHONY: clean tests
+.PHONY: clean tests time
 

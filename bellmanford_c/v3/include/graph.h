@@ -39,6 +39,14 @@ typedef struct mcost{
     uint32_t node;
 } mcost_t;
 
+typedef struct thread_data{
+    FILE * filename;
+    uint32_t source;
+    mcost_t * max;
+    int32_t size;
+    int32_t * path;
+} thread_data_t;
+
 /*
 This file contains all the functions used to read the file and to create the graph as well as a short description of each function.
 For more information about the functions, please refer to the file graph.c
