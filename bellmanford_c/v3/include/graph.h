@@ -40,7 +40,6 @@ typedef struct mcost{
 } mcost_t;
 
 typedef struct thread_data{
-    FILE * filename;
     uint32_t source;
     mcost_t * max;
     int32_t size;
