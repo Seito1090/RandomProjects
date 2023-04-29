@@ -1,0 +1,47 @@
+
+
+
+void *computers(void *arg) {
+    uint32_t source;
+    bool* done = (bool *)arg;
+    thread_data_t *data = (thread_data_t *)malloc(sizeof(thread_data_t));
+    while (true){
+        pthread_mutex_lock(&mutex);
+        while (head == tail){
+            pthread_cond_wait(&not_empty, &mutex);
+
+            // add a check for done variable here
+            if (*done) {
+                pthread_mutex_unlock(&mutex);
+                pthread_exit(NULL);
+            }
+        }
+        source = firstbuffer[tail];
+        tail = (tail + 1) % BUFFERSIZE;
+        pthread_mutex_unlock(&mutex);
+        if (graph == NULL) {
+            printf("Error: graph is null\n");
+            pthread_exit(NULL);
+        }
+        ford_t *ford = (ford_t *)bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, verbose);
+        printf("Distance from %d to %d: %d\n", source, 1, ford->dist[1]);
+        mcost_t * max = (mcost_t *)get_max(graph->file_infos->nb_nodes, ford->dist, source);
+        printf("Max cost: %ld\n", max->cost);
+        printf("Max node: %d\n", max->node);
+        int32_t size = graph->file_infos->nb_nodes;
+        int32_t * path = (int32_t *)get_path(max->node, source, ford->path, &size);
+        // data->source = source;
+        // data->max = max;
+        // data->size = size;
+        data->path = path;
+        // printf("Source node : %d\n", data->source);
+        // printf("Max cost : %ld\n", data->max->cost);
+        // printf("Max node : %d\n", data->max->node);
+        // printf("Path size : %d\n", data->size);
+        printf("path size:  %d\n", size);
+        free_path(path);
+        free_max_struct(max);
+        free_ford_struct(ford);
+    }
+    pthread_exit(NULL);
+}
