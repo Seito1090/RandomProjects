@@ -1,24 +1,63 @@
+void *readthread(void *arg) {
 
+    //Open and check file
+    char *filename = (char *) arg;
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Error opening file %s\n", filename);
+        pthread_exit(NULL);
+    }
+
+    //Initialize graph and checks if it went well, stop if it went wrong
+    graph = (graph_t *)get_file_info(file); //graph is global so that each thread can access it
+    if (graph == NULL) {
+        printf("Error reading graph from file\n");
+        pthread_exit(NULL);
+    }
+
+    //Decomment this line for debug purposes
+    //printf("Number of nodes: %d\n", graph->file_infos->nb_nodes);
+
+    //Fill the buffer with the source nodes and signal the other threads
+    for (uint32_t src; src < graph->file_infos->nb_nodes; src++) {
+        pthread_mutex_lock(&read_mutex);
+        while ((readhead + 1) % BUFFERSIZE == readtail) {
+            pthread_cond_wait(&read_not_full, &read_mutex);
+        }
+        readbuffer[readhead] = src;
+        printf("Read thread: %d\n", src);
+        readhead = (readhead + 1) % BUFFERSIZE;
+        pthread_mutex_unlock(&read_mutex);
+
+        pthread_cond_signal(&read_not_empty);
+    }
+    pthread_exit(NULL);
+}
 
 
 void *computers(void *arg) {
     uint32_t source;
-    bool* done = (bool *)arg;
+    bool* args = (bool *)arg;
+    bool read_done = args[0];
+    bool write_done = args[1];
+
     thread_data_t *data = (thread_data_t *)malloc(sizeof(thread_data_t));
     while (true){
-        pthread_mutex_lock(&mutex);
-        while (head == tail){
-            pthread_cond_wait(&not_empty, &mutex);
+        pthread_mutex_lock(&read_mutex);
+        while (readhead == readtail){
+            pthread_cond_wait(&read_not_empty, &read_mutex);
 
-            // add a check for done variable here
-            if (*done) {
-                pthread_mutex_unlock(&mutex);
+            if (read_done) {
+                pthread_mutex_unlock(&read_mutex);
                 pthread_exit(NULL);
             }
         }
-        source = firstbuffer[tail];
-        tail = (tail + 1) % BUFFERSIZE;
-        pthread_mutex_unlock(&mutex);
+        source = readbuffer[readtail];
+        readtail = (readtail + 1) % BUFFERSIZE;
+        pthread_mutex_unlock(&read_mutex);
+
+        pthread_cond_signal(&read_not_full);
+
         if (graph == NULL) {
             printf("Error: graph is null\n");
             pthread_exit(NULL);
@@ -30,18 +69,23 @@ void *computers(void *arg) {
         printf("Max node: %d\n", max->node);
         int32_t size = graph->file_infos->nb_nodes;
         int32_t * path = (int32_t *)get_path(max->node, source, ford->path, &size);
-        // data->source = source;
-        // data->max = max;
-        // data->size = size;
+        data->source = source;
+        data->max = max;
+        data->size = size;
         data->path = path;
-        // printf("Source node : %d\n", data->source);
-        // printf("Max cost : %ld\n", data->max->cost);
-        // printf("Max node : %d\n", data->max->node);
-        // printf("Path size : %d\n", data->size);
         printf("path size:  %d\n", size);
         free_path(path);
         free_max_struct(max);
         free_ford_struct(ford);
     }
+    pthread_mutex_lock(&write_mutex);
+    while ((writehead + 1) % BUFFERSIZE == writetail) {
+        pthread_cond_wait(&write_not_full, &write_mutex);
+    }
+    writebuffer[writehead] = *data;
+    writehead = (writehead + 1) % BUFFERSIZE;
+    pthread_mutex_unlock(&write_mutex);
+
+    pthread_cond_signal(&write_not_empty);
     pthread_exit(NULL);
 }
