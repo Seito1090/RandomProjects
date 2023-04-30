@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define BUFFERSIZE 3
+#define BUFFERSIZE 2
+#define NTHREADS 4
 
 uint32_t readbuffer[BUFFERSIZE];
 int readhead = 0;
@@ -43,7 +44,7 @@ void *readthread(void *arg) {
     }
 
     //Decomment this line for debug purposes
-    //printf("Number of nodes: %d\n", graph->file_infos->nb_nodes);
+    // printf("Number of nodes: %d\n", graph->file_infos->nb_nodes);
 
     //Fill the buffer with the source nodes and signal the other threads
     for (uint32_t src; src < graph->file_infos->nb_nodes; src++) {
@@ -65,7 +66,6 @@ void *readthread(void *arg) {
 void *computers(void *arg) {
     uint32_t source;
     bool *read_done = (bool *)arg;
-
     thread_data_t *data = (thread_data_t *)malloc(sizeof(thread_data_t));
     if (data == NULL) {
         printf("Error: Failed to allocate thread data.\n");
@@ -87,6 +87,7 @@ void *computers(void *arg) {
         pthread_mutex_unlock(&read_mutex);
 
         pthread_cond_signal(&read_not_full);
+        // printf("Computers :%u\n", source);
 
         if (graph == NULL) {
             printf("Error: graph is null\n");
@@ -119,18 +120,19 @@ void *computers(void *arg) {
         pthread_mutex_unlock(&write_mutex);
 
         pthread_cond_signal(&write_not_empty);
-        
+        printf("hey :)\n");
     }
     pthread_exit(NULL);
 }
 
 // writethread done = false / need to rethink the structure + function and then test it 
 void *writethread(void *arg){
-    thread_data_t *data;
+    thread_data_t *data = (thread_data_t *)malloc(sizeof(thread_data_t));
     // printf("hey :)\n");
     bool *write_done = (bool *)arg;
     FILE *filename = fopen("multithreadtest.bin", "w+"); //will just replace with the argument passed
     int wrote;
+    // printf("Write thread entry\n");
     while (true) {
         pthread_mutex_lock(&write_mutex);
         while (writehead == writetail) {
@@ -161,16 +163,20 @@ void *writethread(void *arg){
             printf("Error writing to file\n");
             pthread_exit(NULL);
         }
+        // printf("Write thread done source : %d\n", data->source);  
         free_max_struct(data->max);
         free_path(data->path);
-        printf("Write thread done\n");  
     }
-    fclose(filename);
     pthread_exit(NULL);
 }
 
 int main(int args, char *argv[]) {
-    pthread_t thread, computethread1, computethread2, lastthread;
+    if (NTHREADS < 3) {
+        printf("Error: NTHREADS must be at least 3\n");
+        return 1;
+    } else {
+    pthread_t thread[NTHREADS];
+    int thrd = 0;
     pthread_mutex_init(&read_mutex, NULL);
     pthread_cond_init(&read_not_empty, NULL);
     pthread_cond_init(&read_not_full, NULL);
@@ -180,28 +186,26 @@ int main(int args, char *argv[]) {
 
     //start producer thread
     char *filename = "tests/graph_bin/default.bin";
-    int grph, rep, write;
-    grph = pthread_create(&thread, NULL, readthread, (void *) filename);
+    int grph, write;
+    grph = pthread_create(&thread[thrd], NULL, readthread, (void *) filename);
     if (grph != 0) {
         printf("Error creating thread\n");
         return 1;
     }
     // start consumer thread
     bool read_done = false;
-    rep = pthread_create(&computethread1, NULL, computers, (void *)&read_done);
-    pthread_create(&computethread2, NULL, computers, (void *)&read_done);
-    if (rep != 0) {
-        printf("Error creating thread\n");
-        return 1;
+    for (thrd = 1; thrd < NTHREADS - 1; thrd++) {
+        pthread_create(&thread[thrd], NULL, computers, (void *)&read_done);
     }
     bool write_done = false;
-    write = pthread_create(&lastthread, NULL, writethread, (void *)&write_done);
+    write = pthread_create(&thread[thrd], NULL, writethread, (void *)&write_done);
     if (write != 0) {
         printf("Error creating thread\n");
         return 1;
     }
+    thrd = 0;
     // wait for threads to finish 
-    pthread_join(thread, NULL);
+    pthread_join(thread[thrd], NULL);
 
     // signal consumer thread to finish
     pthread_mutex_lock(&read_mutex);
@@ -210,9 +214,10 @@ int main(int args, char *argv[]) {
     pthread_mutex_unlock(&read_mutex);
 
     // wait for consumer thread to finish
-    pthread_join(computethread1, NULL);
-    pthread_join(computethread2, NULL);  
-    printf("Done1\n");
+    for (thrd = 1; thrd < NTHREADS - 1; thrd++) {
+        pthread_join(thread[thrd], NULL);
+    }
+    // printf("Done1\n");
 
     // signal last thread to finish
     pthread_mutex_lock(&write_mutex);
@@ -220,8 +225,8 @@ int main(int args, char *argv[]) {
     pthread_cond_broadcast(&write_not_empty);
     pthread_mutex_unlock(&write_mutex);
     // wait for last thread to finish
-    pthread_join(lastthread, NULL);
-    printf("Done2\n");
+    pthread_join(thread[thrd], NULL);
+    printf("Done\n");
     //cleanup 
     pthread_mutex_destroy(&read_mutex);
     pthread_cond_destroy(&read_not_empty);
@@ -230,5 +235,6 @@ int main(int args, char *argv[]) {
     pthread_cond_destroy(&write_not_empty);
     pthread_cond_destroy(&write_not_full);
     free_graph_struct(graph);
+    }
     return 0;
 }
