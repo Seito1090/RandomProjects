@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define BUFFERSIZE 2
+#define BUFFERSIZE 4
 #define NTHREADS 4
 
 uint32_t readbuffer[BUFFERSIZE];
@@ -47,7 +47,7 @@ void *readthread(void *arg) {
     // printf("Number of nodes: %d\n", graph->file_infos->nb_nodes);
 
     //Fill the buffer with the source nodes and signal the other threads
-    for (uint32_t src; src < graph->file_infos->nb_nodes; src++) {
+    for (uint32_t src = 0; src < graph->file_infos->nb_nodes; src++) {
         pthread_mutex_lock(&read_mutex);
         while ((readhead + 1) % BUFFERSIZE == readtail) {
             pthread_cond_wait(&read_not_full, &read_mutex);
@@ -79,6 +79,7 @@ void *computers(void *arg) {
 
             if (*read_done) {
                 pthread_mutex_unlock(&read_mutex);
+                free(data);
                 pthread_exit(NULL);
             }
         }
@@ -122,16 +123,19 @@ void *computers(void *arg) {
         pthread_cond_signal(&write_not_empty);
         printf("hey :)\n");
     }
+    free(data);
     pthread_exit(NULL);
 }
 
 // writethread done = false / need to rethink the structure + function and then test it 
 void *writethread(void *arg){
-    thread_data_t *data = (thread_data_t *)malloc(sizeof(thread_data_t));
+    thread_data_t *data;    
     // printf("hey :)\n");
     bool *write_done = (bool *)arg;
     FILE *filename = fopen("multithreadtest.bin", "w+"); //will just replace with the argument passed
+    
     int wrote;
+    bool first_pass = true;
     // printf("Write thread entry\n");
     while (true) {
         pthread_mutex_lock(&write_mutex);
@@ -154,10 +158,19 @@ void *writethread(void *arg){
             printf("Error: data is null\n");
             pthread_exit(NULL);
         }
+        if (first_pass) {
+            uint32_t nb_nodes_be = htonl(graph->file_infos->nb_nodes);
+            if (fwrite(&nb_nodes_be, sizeof(uint32_t), 1, filename) != 1) {
+                printf("Error: Failed to write source node.\n");
+                pthread_exit(NULL);
+            }
+            first_pass = false;
+        }
         // printf("Write Thread\n");
         // for (int i = 0; i < data->size; i++) {
         //     printf("path[%d]%d \n", i, data->path[i]);
         // }
+        // printf("Writing to file, \nsource : %d\ncost : %ld\nnode : %d\nsize : %d\n", data->source, data->max->cost, data->max->node, data->size);
         wrote = write_to_file(filename, data->source, data->max, data->size, data->path);
         if (wrote == 1) { //TODO: check for potential errors in write_to_file, return 1 in those cases 
             printf("Error writing to file\n");
@@ -170,6 +183,11 @@ void *writethread(void *arg){
     pthread_exit(NULL);
 }
 
+// void *doublethread(void * arg){
+//     //We just split the bellmanford into two threads
+//     //We do this because writing and reading from a file is quite quick compared to the 
+//     //actual computation of the bellmanford algorithm
+// }
 int main(int args, char *argv[]) {
     if (NTHREADS < 3) {
         printf("Error: NTHREADS must be at least 3\n");
@@ -194,7 +212,7 @@ int main(int args, char *argv[]) {
     }
     // start consumer thread
     bool read_done = false;
-    for (thrd = 1; thrd < NTHREADS - 1; thrd++) {
+    for (thrd = 1; thrd < NTHREADS - 2; thrd++) {
         pthread_create(&thread[thrd], NULL, computers, (void *)&read_done);
     }
     bool write_done = false;
@@ -204,8 +222,8 @@ int main(int args, char *argv[]) {
         return 1;
     }
     thrd = 0;
-    // wait for threads to finish 
     pthread_join(thread[thrd], NULL);
+    // wait for threads to finish 
 
     // signal consumer thread to finish
     pthread_mutex_lock(&read_mutex);
@@ -214,7 +232,7 @@ int main(int args, char *argv[]) {
     pthread_mutex_unlock(&read_mutex);
 
     // wait for consumer thread to finish
-    for (thrd = 1; thrd < NTHREADS - 1; thrd++) {
+    for (thrd = 1; thrd < NTHREADS - 2; thrd++) {
         pthread_join(thread[thrd], NULL);
     }
     // printf("Done1\n");

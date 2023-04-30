@@ -89,3 +89,10 @@ void *computers(void *arg) {
     pthread_cond_signal(&write_not_empty);
     pthread_exit(NULL);
 }
+
+
+// void *doublethread(void * arg){
+//     //We just split the bellmanford into two threads
+//     //We do this because writing and reading from a file is quite quick compared to the 
+//     //actual computation of the bellmanford algorithm
+// }
