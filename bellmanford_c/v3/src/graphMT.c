@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define BUFFERSIZE 3
+#define BUFFERSIZE 4
 #define NTHREADS 4
 
 uint32_t readbuffer[BUFFERSIZE];
@@ -76,9 +76,10 @@ void *computers(void *arg) {
         pthread_mutex_lock(&read_mutex);
         while (readhead == readtail){
             pthread_cond_wait(&read_not_empty, &read_mutex);
-
+            printf("Computers: waiting for read thread : %d\n", *read_done);
             if (*read_done) {
                 pthread_mutex_unlock(&read_mutex);
+                printf("Computers: read thread done\n");
                 free(data);
                 pthread_exit(NULL);
             }
@@ -91,8 +92,10 @@ void *computers(void *arg) {
 
         if (graph == NULL) {
             printf("Error: graph is null\n");
+            free(data);
             pthread_exit(NULL);
         }
+
         ford_t *ford = (ford_t *)bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, verbose);
         mcost_t * max = (mcost_t *)get_max(graph->file_infos->nb_nodes, ford->dist, source);
         int32_t size = graph->file_infos->nb_nodes;
@@ -108,9 +111,14 @@ void *computers(void *arg) {
         pthread_mutex_unlock(&write_mutex);
 
         pthread_cond_signal(&write_not_empty);
-        printf("Consumer no %d finished\n", source);
+        if (*read_done) {
+            // free_max_struct(max);
+            // free_path(path);  
+            free(data);         
+            pthread_exit(NULL);
+        }
+        
     }
-    free(data);
     pthread_exit(NULL);
 }
 
@@ -128,9 +136,11 @@ void *writethread(void *arg){
         pthread_mutex_lock(&write_mutex);
         while (writehead == writetail) {
             pthread_cond_wait(&write_not_empty, &write_mutex);
-
+            printf("Write thread: waiting and done is : %d\n", *write_done);
             if (*write_done) {
                 pthread_mutex_unlock(&write_mutex);
+                printf("Exitting write thread\n");
+                fclose(filename);
                 pthread_exit(NULL);
             }
         }
@@ -163,10 +173,16 @@ void *writethread(void *arg){
             printf("Error writing to file\n");
             pthread_exit(NULL);
         }
-        // printf("Write thread done source : %d\n", data->source);  
-        printf("Write source %d done\n", data->source);
         free_max_struct(data->max);
         free_path(data->path);
+        // printf("Write thread done source : %d\n", data->source);  
+        printf("Write source %d done\n", data->source);
+        if(*write_done){
+            free_max_struct(data->max);
+            free_path(data->path);
+            fclose(filename);
+            pthread_exit(NULL);
+        }
     }
     pthread_exit(NULL);
 }
@@ -177,8 +193,16 @@ void *writethread(void *arg){
 //     //actual computation of the bellmanford algorithm
 // }
 int main(int args, char *argv[]) {
-    if (NTHREADS < 3) {
-        printf("Error: NTHREADS must be at least 3\n");
+    if (NTHREADS <= 0) {
+        printf("Error: Invalid number of threads\n");
+        return 1;
+    } else if (NTHREADS == 1) {
+        // do singe thread
+        printf("Error: Invalid number of threads\n");
+        return 1;
+    } else if (NTHREADS == 2) {
+        // do double thread
+        printf("Error: Invalid number of threads\n");
         return 1;
     } else {
     pthread_t thread[NTHREADS];
@@ -219,16 +243,17 @@ int main(int args, char *argv[]) {
     pthread_cond_broadcast(&read_not_empty);
     pthread_mutex_unlock(&read_mutex);
 
-    // signal last thread to finish
-    pthread_mutex_lock(&write_mutex);
-    write_done = true;
-    pthread_cond_broadcast(&write_not_empty);
-    pthread_mutex_unlock(&write_mutex);
     // wait for consumer thread to finish
     for (thrd = 1; thrd < NTHREADS - 1; thrd++) {
         pthread_join(thread[thrd], NULL);
         printf("Thread %d joined\n", thrd);
     }
+
+    // signal last thread to finish
+    pthread_mutex_lock(&write_mutex);
+    write_done = true;
+    pthread_cond_broadcast(&write_not_empty);
+    pthread_mutex_unlock(&write_mutex);
     // printf("Done1\n");
     printf("Done computers \n");
     // wait for last thread to finish
