@@ -76,9 +76,10 @@ void *computers(void *arg) {
         pthread_mutex_lock(&read_mutex);
         while (readhead == readtail){
             pthread_cond_wait(&read_not_empty, &read_mutex);
-
+            // printf("Computers: waiting for read thread : %d\n", *read_done);
             if (*read_done) {
                 pthread_mutex_unlock(&read_mutex);
+                printf("Computers: read thread done\n");
                 free(data);
                 pthread_exit(NULL);
             }
@@ -88,29 +89,18 @@ void *computers(void *arg) {
         pthread_mutex_unlock(&read_mutex);
 
         pthread_cond_signal(&read_not_full);
-        // printf("Computers :%u\n", source);
 
         if (graph == NULL) {
             printf("Error: graph is null\n");
+            free(data);
             pthread_exit(NULL);
         }
+
         ford_t *ford = (ford_t *)bellman_ford(graph->file_infos->nb_nodes, graph->file_infos->nb_edges, graph->graph_data, source, verbose);
-        // printf("Distance from %d to %d: %d\n", source, 1, ford->dist[1]);
         mcost_t * max = (mcost_t *)get_max(graph->file_infos->nb_nodes, ford->dist, source);
-        // printf("Max cost: %ld\n", max->cost);
-        // printf("Max node: %d\n", max->node);
         int32_t size = graph->file_infos->nb_nodes;
         int32_t * path = (int32_t *)get_path(max->node, source, ford->path, &size);
-        data->source = source;
-        data->max = max;
-        data->size = size;
-        data->path = path;
-        // for (int i = 0; i < size; i++) {
-        //     printf("path[%d]: %d\n", i, path[i]);
-        // }
-        // printf("path size:  %d\n", size);
-        // printf("cost: %ld\n", max->cost);
-        // printf("cost in data: %ld\n", data->cost);
+        data->source = source; data->max = max; data->size = size; data->path = path;
         free_ford_struct(ford);
         pthread_mutex_lock(&write_mutex);
         while ((writehead + 1) % BUFFERSIZE == writetail) {
@@ -121,9 +111,14 @@ void *computers(void *arg) {
         pthread_mutex_unlock(&write_mutex);
 
         pthread_cond_signal(&write_not_empty);
-        printf("hey :)\n");
+        if (*read_done) {
+            // free_max_struct(max);
+            // free_path(path);  
+            free(data);         
+            pthread_exit(NULL);
+        }
+        
     }
-    free(data);
     pthread_exit(NULL);
 }
 
@@ -141,9 +136,11 @@ void *writethread(void *arg){
         pthread_mutex_lock(&write_mutex);
         while (writehead == writetail) {
             pthread_cond_wait(&write_not_empty, &write_mutex);
-
+            // printf("Write thread: waiting and done is : %d\n", *write_done);
             if (*write_done) {
                 pthread_mutex_unlock(&write_mutex);
+                printf("Exitting write thread\n");
+                fclose(filename);
                 pthread_exit(NULL);
             }
         }
@@ -176,9 +173,16 @@ void *writethread(void *arg){
             printf("Error writing to file\n");
             pthread_exit(NULL);
         }
-        // printf("Write thread done source : %d\n", data->source);  
         free_max_struct(data->max);
         free_path(data->path);
+        // printf("Write thread done source : %d\n", data->source);  
+        // printf("Write source %d done\n", data->source);
+        if(*write_done){
+            free_max_struct(data->max);
+            free_path(data->path);
+            fclose(filename);
+            pthread_exit(NULL);
+        }
     }
     pthread_exit(NULL);
 }
@@ -189,8 +193,16 @@ void *writethread(void *arg){
 //     //actual computation of the bellmanford algorithm
 // }
 int main(int args, char *argv[]) {
-    if (NTHREADS < 3) {
-        printf("Error: NTHREADS must be at least 3\n");
+    if (NTHREADS <= 0) {
+        printf("Error: Invalid number of threads\n");
+        return 1;
+    } else if (NTHREADS == 1) {
+        // do singe thread
+        printf("Error: Invalid number of threads\n");
+        return 1;
+    } else if (NTHREADS == 2) {
+        // do double thread
+        printf("Error: Invalid number of threads\n");
         return 1;
     } else {
     pthread_t thread[NTHREADS];
@@ -203,7 +215,7 @@ int main(int args, char *argv[]) {
     pthread_cond_init(&write_not_full, NULL);
 
     //start producer thread
-    char *filename = "tests/graph_bin/default.bin";
+    char *filename = "tests/necessary_python/test.bin";
     int grph, write;
     grph = pthread_create(&thread[thrd], NULL, readthread, (void *) filename);
     if (grph != 0) {
@@ -212,7 +224,7 @@ int main(int args, char *argv[]) {
     }
     // start consumer thread
     bool read_done = false;
-    for (thrd = 1; thrd < NTHREADS - 2; thrd++) {
+    for (thrd = 1; thrd < NTHREADS - 1; thrd++) {
         pthread_create(&thread[thrd], NULL, computers, (void *)&read_done);
     }
     bool write_done = false;
@@ -224,7 +236,7 @@ int main(int args, char *argv[]) {
     thrd = 0;
     pthread_join(thread[thrd], NULL);
     // wait for threads to finish 
-
+    printf("Done reading, thread 0 joined\n");
     // signal consumer thread to finish
     pthread_mutex_lock(&read_mutex);
     read_done = true;
@@ -232,19 +244,22 @@ int main(int args, char *argv[]) {
     pthread_mutex_unlock(&read_mutex);
 
     // wait for consumer thread to finish
-    for (thrd = 1; thrd < NTHREADS - 2; thrd++) {
+    for (thrd = 1; thrd < NTHREADS - 1; thrd++) {
         pthread_join(thread[thrd], NULL);
+        // printf("Thread %d joined\n", thrd);
     }
-    // printf("Done1\n");
 
     // signal last thread to finish
     pthread_mutex_lock(&write_mutex);
     write_done = true;
     pthread_cond_broadcast(&write_not_empty);
     pthread_mutex_unlock(&write_mutex);
+    // printf("Done1\n");
+    printf("Done computers \n");
     // wait for last thread to finish
+    printf("Waiting for last thread %d to join\n", thrd);
     pthread_join(thread[thrd], NULL);
-    printf("Done\n");
+    printf("Done last thread joined\n");
     //cleanup 
     pthread_mutex_destroy(&read_mutex);
     pthread_cond_destroy(&read_not_empty);

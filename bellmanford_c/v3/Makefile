@@ -15,18 +15,18 @@ help:
 	@echo "+------------------------------------------------------------------------------------+"
 
 # compile the program with gcc
-sp: src/graph.o sp.c 
+sp: src/graph.c sp.c 
 	$(CC) $(INCLUDE_HEADERS_DIRECTORY) $(CFLAGS) -o main $^    
 
-#%.o: %.c                  # if for example you want to compute example.c this will create an object file called example.o in the same directory as example.c. Don't forget to clean it in your "make clean"
-#	$(CC) $(INCLUDE_HEADERS_DIRECTORY) $(CFLAGS) -o $@ -c $<
+%.o: %.c                  # if for example you want to compute example.c this will create an object file called example.o in the same directory as example.c. Don't forget to clean it in your "make clean"
+	$(CC) $(INCLUDE_HEADERS_DIRECTORY) $(CFLAGS) -o $@ -c $<
 
 run: 
 	@make -s sp 
 	@./main tests/graph_bin/default.bin
 
 time:
-	@make -s sp
+	@make -s mt
 	@echo "Running the program with the default graph"
 	@time ./main tests/graph_bin/default.bin
 
@@ -40,7 +40,7 @@ clean:
 	@rm -f tests/graph_bin/p_*
 	@echo "Cleared"
 
-tests: src/graph.o tests/cunittests.c
+tests: src/graph.c tests/cunittests.c
 	   $(CC) $(INCLUDE_HEADERS_DIRECTORY) $(CFLAGS) -o tests/cunit_tests $^ $(LIBS)
 
 # run them with valgrind to check for memory leaks and see output
@@ -68,8 +68,9 @@ myfile:
 	./main tests/graph_bin/$$FileName.bin -f myFileOut.bin; \
 	echo "Done";
 
-mt:	src/graph.o src/graphMT.c 
+mt:	src/graph.c src/graphMT.c 
 	$(CC) $(INCLUDE_HEADERS_DIRECTORY) $(CFLAGS) -o graphMT $^ 
+	./graphMT
 
 # a .PHONY target forces make to execute the command even if the target already exists
 .PHONY: clean tests time
