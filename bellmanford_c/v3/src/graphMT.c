@@ -3,14 +3,13 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define BUFFERSIZE 6
-#define NTHREADS 5
+#define BUFFERSIZE 2
+#define NTHREADS 1
 
 uint32_t readbuffer[BUFFERSIZE];
 int readhead = 0;
 int readtail = 0;
 
-pthread_mutex_t read_done_mutex;
 pthread_mutex_t read_mutex;
 pthread_cond_t read_not_empty;
 pthread_cond_t read_not_full;
@@ -25,6 +24,8 @@ pthread_cond_t write_not_full;
 
 graph_t *graph;
 bool verbose = false;
+bool read_done = false;
+bool write_done = false;
 
 //readthread done = true
 void *readthread(void *arg) {
@@ -58,22 +59,22 @@ void *readthread(void *arg) {
         readhead = (readhead + 1) % BUFFERSIZE;
         pthread_cond_broadcast(&read_not_empty);
         pthread_mutex_unlock(&read_mutex);
-
     }
+    
     pthread_exit(NULL);
 }
 
 //computers done = false / still need to adapt it for the second part 
 void *computers(void *arg) {
     uint32_t source;
-    bool *read_done = (bool *)arg;
-    pthread_mutex_lock(&read_done_mutex);
-    if (*read_done){
-        pthread_mutex_unlock(&read_done_mutex);
-        printf("Computers: read thread done\n");
+    // bool *read_done = (bool *)arg;
+    pthread_mutex_lock(&read_mutex);
+    if (read_done){
+        pthread_mutex_unlock(&read_mutex);
+        // printf("Computers: read thread done\n");
         pthread_exit(NULL);
     }
-    pthread_mutex_unlock(&read_done_mutex);
+    pthread_mutex_unlock(&read_mutex);
     thread_data_t *data = (thread_data_t *)malloc(sizeof(thread_data_t));
     if (data == NULL) {
         printf("Error: Failed to allocate thread data.\n");
@@ -85,15 +86,12 @@ void *computers(void *arg) {
         while (readhead == readtail){
             pthread_cond_wait(&read_not_empty, &read_mutex);
             // printf("Computers: waiting for read thread : %d\n", *read_done);
-            pthread_mutex_lock(&read_done_mutex);
-            if (*read_done) {
-                pthread_mutex_unlock(&read_done_mutex);
+            if (read_done) {
                 pthread_mutex_unlock(&read_mutex);
-                printf("Computers: read thread done\n");
+                // printf("Computers: read thread done\n");
                 free(data);
                 pthread_exit(NULL);
             }
-            pthread_mutex_unlock(&read_done_mutex);
         }
         source = readbuffer[readtail];
         readtail = (readtail + 1) % BUFFERSIZE;
@@ -117,28 +115,32 @@ void *computers(void *arg) {
         while ((writehead + 1) % BUFFERSIZE == writetail) {
             pthread_cond_wait(&write_not_full, &write_mutex);
         }
-        pthread_mutex_lock(&read_done_mutex);
-        if (*read_done && readhead == readtail) {
-            pthread_mutex_unlock(&read_done_mutex);
+        pthread_mutex_lock(&read_mutex);
+        if (read_done && readhead == readtail) {
+            pthread_mutex_unlock(&read_mutex);
             pthread_mutex_unlock(&write_mutex);
-            printf("Computers: read thread done\n");
+            // printf("Computers: read thread done\n");
+            printf("freed data of source %d\n", source);   
+            free_max_struct(max);
+            free_path(path);
             free(data);
             pthread_exit(NULL);
         }
-        pthread_mutex_unlock(&read_done_mutex);
+        pthread_mutex_unlock(&read_mutex);
         writebuffer[writehead] = *data;
         writehead = (writehead + 1) % BUFFERSIZE;
         pthread_cond_broadcast(&write_not_empty);
         pthread_mutex_unlock(&write_mutex);
-        pthread_mutex_lock(&read_done_mutex);
-        if (*read_done) {
+        pthread_mutex_lock(&read_mutex);
+        if (read_done) {
             // free_max_struct(max);
             // free_path(path);  
-            pthread_mutex_unlock(&read_done_mutex);
-            free(data);         
+            pthread_mutex_unlock(&read_mutex);
+            free(data);     
+            printf("hey freed data of source %d\n", source);    
             pthread_exit(NULL);
         }
-        pthread_mutex_unlock(&read_done_mutex);
+        pthread_mutex_unlock(&read_mutex);
     }
     pthread_exit(NULL);
 }
@@ -160,7 +162,7 @@ void *writethread(void *arg){
             // printf("Write thread: waiting and done is : %d\n", *write_done);
             if (*write_done) {
                 pthread_mutex_unlock(&write_mutex);
-                printf("Exitting write thread\n");
+                // printf("Exitting write thread\n");
                 fclose(filename);
                 pthread_exit(NULL);
             }
@@ -217,18 +219,10 @@ int main(int args, char *argv[]) {
     if (NTHREADS <= 0) {
         printf("Error: Invalid number of threads\n");
         return 1;
-    } else if (NTHREADS == 1) {
-        // do singe thread
-        printf("Error: Invalid number of threads\n");
-        return 1;
-    } else if (NTHREADS == 2) {
-        // do double thread
-        printf("Error: Invalid number of threads\n");
-        return 1;
+    
     } else {
     pthread_t thread[NTHREADS];
     pthread_t reader, writer;
-    pthread_mutex_init(&read_done_mutex, NULL);
     pthread_mutex_init(&read_mutex, NULL);
     pthread_cond_init(&read_not_empty, NULL);
     pthread_cond_init(&read_not_full, NULL);
@@ -245,11 +239,9 @@ int main(int args, char *argv[]) {
         return 1;
     }
     // start consumer thread
-    bool read_done = false;
     for (int thrd = 0; thrd < NTHREADS; thrd++) {
         pthread_create(&thread[thrd], NULL, computers, (void *)&read_done);
     }
-    bool write_done = false;
     write = pthread_create(&writer, NULL, writethread, (void *)&write_done);
     if (write != 0) {
         printf("Error creating thread\n");
@@ -257,7 +249,7 @@ int main(int args, char *argv[]) {
     }
     pthread_join(reader, NULL);
     // wait for threads to finish 
-    printf("Done reading, thread 0 joined\n");
+    // printf("Done reading, thread 0 joined\n");
     // signal consumer thread to finish
     pthread_mutex_lock(&read_mutex);
     read_done = true;
@@ -282,7 +274,6 @@ int main(int args, char *argv[]) {
     pthread_join(writer, NULL);
     printf("Done last thread joined\n");
     //cleanup 
-    pthread_mutex_destroy(&read_done_mutex);
     pthread_mutex_destroy(&read_mutex);
     pthread_cond_destroy(&read_not_empty);
     pthread_cond_destroy(&read_not_full);
