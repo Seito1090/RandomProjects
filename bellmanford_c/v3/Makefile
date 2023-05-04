@@ -26,7 +26,7 @@ run:
 	@./main tests/graph_bin/default.bin
 
 time:
-	@make -s sp
+	@make -s mt
 	@echo "Running the program with the default graph"
 	@time ./main tests/graph_bin/default.bin
 

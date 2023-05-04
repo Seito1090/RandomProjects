@@ -76,7 +76,7 @@ void *computers(void *arg) {
         pthread_mutex_lock(&read_mutex);
         while (readhead == readtail){
             pthread_cond_wait(&read_not_empty, &read_mutex);
-            printf("Computers: waiting for read thread : %d\n", *read_done);
+            // printf("Computers: waiting for read thread : %d\n", *read_done);
             if (*read_done) {
                 pthread_mutex_unlock(&read_mutex);
                 printf("Computers: read thread done\n");
@@ -136,7 +136,7 @@ void *writethread(void *arg){
         pthread_mutex_lock(&write_mutex);
         while (writehead == writetail) {
             pthread_cond_wait(&write_not_empty, &write_mutex);
-            printf("Write thread: waiting and done is : %d\n", *write_done);
+            // printf("Write thread: waiting and done is : %d\n", *write_done);
             if (*write_done) {
                 pthread_mutex_unlock(&write_mutex);
                 printf("Exitting write thread\n");
@@ -176,7 +176,7 @@ void *writethread(void *arg){
         free_max_struct(data->max);
         free_path(data->path);
         // printf("Write thread done source : %d\n", data->source);  
-        printf("Write source %d done\n", data->source);
+        // printf("Write source %d done\n", data->source);
         if(*write_done){
             free_max_struct(data->max);
             free_path(data->path);
@@ -215,7 +215,7 @@ int main(int args, char *argv[]) {
     pthread_cond_init(&write_not_full, NULL);
 
     //start producer thread
-    char *filename = "tests/graph_bin/default.bin";
+    char *filename = "tests/necessary_python/test.bin";
     int grph, write;
     grph = pthread_create(&thread[thrd], NULL, readthread, (void *) filename);
     if (grph != 0) {
@@ -246,7 +246,7 @@ int main(int args, char *argv[]) {
     // wait for consumer thread to finish
     for (thrd = 1; thrd < NTHREADS - 1; thrd++) {
         pthread_join(thread[thrd], NULL);
-        printf("Thread %d joined\n", thrd);
+        // printf("Thread %d joined\n", thrd);
     }
 
     // signal last thread to finish
