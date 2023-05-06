@@ -145,5 +145,16 @@ def read_binary_file(file_path1, file_path2):
             # Print the integer value
             print("val py : ", value1 ," val c : " , value2)
 
-read_binary_file("bellmanford_c/v3/tests/output_tests/default_c.bin","bellmanford_c/v3/multithreadtest.bin")
-print(files_are_equal("bellmanford_c/v3/tests/output_tests/default_c.bin","bellmanford_c/v3/multithreadtest.bin"))
+def readgraph(file):
+    with open(file, 'rb') as f1:
+        while True:
+            # Read 4 bytes in big-endian byte order
+            data1 = f1.read(8)
+            # Unpack the 4 bytes as a big-endian integer
+            value1 = int.from_bytes(data1, byteorder='big')
+            # Print the integer value
+            print(value1)
+
+# read_binary_file("bellmanford_c/v3/tests/output_tests/default_c.bin","bellmanford_c/v3/test.bin")
+# print(files_are_equal("bellmanford_c/v3/tests/output_tests/default_c.bin","bellmanford_c/v3/test.bin"))
+readgraph("bellmanford_c/v3/tests/graph_bin/default.bin")

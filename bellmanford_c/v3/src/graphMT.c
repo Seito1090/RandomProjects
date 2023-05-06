@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define BUFFERSIZE 2
-#define NTHREADS 1
+#define BUFFERSIZE 13
+#define NTHREADS 12
 
 uint32_t readbuffer[BUFFERSIZE];
 int readhead = 0;
@@ -231,7 +231,7 @@ int main(int args, char *argv[]) {
     pthread_cond_init(&write_not_full, NULL);
 
     //start producer thread
-    char *filename = "tests/graph_bin/default.bin";
+    char *filename = "tests/necessary_python/test.bin";
     int grph, write;
     grph = pthread_create(&reader, NULL, readthread, (void *) filename);
     if (grph != 0) {
