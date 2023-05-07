@@ -122,11 +122,11 @@ void *computers(void *arg) {
         //There's also a check first to see if the read thread is done, 
         //This helped to avoid a deadlock
         pthread_mutex_lock(&read_mutex);
-        if (read_done) { 
-            pthread_mutex_unlock(&read_mutex);
-            free(data);
-            pthread_exit(NULL);
-        }
+        // if (read_done) { 
+        //     pthread_mutex_unlock(&read_mutex);
+        //     free(data);
+        //     pthread_exit(NULL);
+        // }
         while (readhead == readtail){
             pthread_cond_wait(&read_not_empty, &read_mutex);
             if (read_done) { //if it is empty wait for it to be filled
@@ -221,6 +221,7 @@ void *writethread(void *arg){
 
         //Waits for the writebuffer to be accessible and reads the data structure
         pthread_mutex_lock(&write_mutex);
+        pthread_mutex_lock(&write_done_mutex);
         if(write_done){
             if (writecount < graph->file_infos->nb_nodes){
                 printf("Error: not all data was written to the file A\n");
@@ -254,10 +255,12 @@ void *writethread(void *arg){
                 //         pthread_exit(NULL);
                 //     }
                 // }
+                pthread_mutex_unlock(&write_done_mutex);
                 pthread_mutex_unlock(&write_mutex);
                 pthread_exit(NULL);
             }   
         }
+        pthread_mutex_unlock(&write_done_mutex);
         while (writehead == writetail) {
             pthread_cond_wait(&write_not_empty, &write_mutex);
             if (write_done) {
@@ -323,15 +326,15 @@ void *writethread(void *arg){
         free_path(data->path);
 
         //Checks if it has done everything, if it has, it frees the data and exits (in a mutex to avoid a race condition)
-        pthread_mutex_lock(&write_mutex);
+        pthread_mutex_lock(&write_done_mutex);
         if(write_done){
             if (write_done == graph->file_infos->nb_nodes) {
-                pthread_mutex_unlock(&write_mutex);
+                pthread_mutex_unlock(&write_done_mutex);
                 printf("emergencey exit \n");
                 pthread_exit(NULL);
             }
         }
-        pthread_mutex_unlock(&write_mutex);
+        pthread_mutex_unlock(&write_done_mutex);
     }
     pthread_exit(NULL);
 }
