@@ -255,7 +255,8 @@ void *writethread(void *arg){
                 }
                 pthread_mutex_unlock(&write_mutex);
                 pthread_exit(NULL);
-        }   }
+            }   
+        }
         while (writehead == writetail) {
             pthread_cond_wait(&write_not_empty, &write_mutex);
             if (write_done) {
