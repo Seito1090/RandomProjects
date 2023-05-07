@@ -68,6 +68,7 @@ void *readthread(void *arg) {
             pthread_cond_wait(&read_not_full, &read_mutex);
         }
         readbuffer[readhead] = src;
+        printf("put source %d in buffer\n", src);
         readhead = (readhead + 1) % BUFFERSIZE;
         pthread_cond_signal(&read_not_empty);
         pthread_mutex_unlock(&read_mutex);
