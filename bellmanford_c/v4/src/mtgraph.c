@@ -224,35 +224,36 @@ void *writethread(void *arg){
         if(write_done){
             if (writecount < graph->file_infos->nb_nodes){
                 printf("Error: not all data was written to the file A\n");
-                printf("writetail and writehead: %d %d\n", writetail, writehead);
-                thread_data_t * data1 = &writebuffer[writetail];
-                thread_data_t * data2 = &writebuffer[writehead];
-                thread_data_t * data3 = &writebuffer[(writehead + 1) % BUFFERSIZE];
-                thread_data_t * data4 = &writebuffer[(writehead + 2) % BUFFERSIZE];
-                thread_data_t * data5 = &writebuffer[(writehead + 3) % BUFFERSIZE];
-                printf("sources : \n data 1 : %d \n data 2 : %d \n data 3 : %d \n data 4 : %d \n data 5 : %d \n", data1->source, data2->source, data3->source, data4->source, data5->source);
-                data = &writebuffer[0];
-                if (show){
+                printf("differance between writecount and nb_nodes: %d\n", graph->file_infos->nb_nodes - writecount);
+                // printf("writetail and writehead: %d %d\n", writetail, writehead);
+                // thread_data_t * data1 = &writebuffer[writetail];
+                // thread_data_t * data2 = &writebuffer[writehead];
+                // thread_data_t * data3 = &writebuffer[(writehead + 1) % BUFFERSIZE];
+                // thread_data_t * data4 = &writebuffer[(writehead + 2) % BUFFERSIZE];
+                // thread_data_t * data5 = &writebuffer[(writehead + 3) % BUFFERSIZE];
+                // printf("sources : \n data 1 : %d \n data 2 : %d \n data 3 : %d \n data 4 : %d \n data 5 : %d \n", data1->source, data2->source, data3->source, data4->source, data5->source);
+                // data = &writebuffer[0];
+                // if (show){
 
-                    //Shows the graph computed data in the terminal
-                    printf("Source node : %d\nDistances : [ ", data->source);
-                    for (int i = 0; i < graph->file_infos->nb_nodes; i++) {
-                        printf("%d ", data->ford->dist[i]);
-                    }
-                    printf("]\n    Destination : %u\n    Cost : %lld\n    Number of nodes : %d\n    Path : [", data->max->node, data->max->cost, data->size);
-                    for (int i = 0; i < data->size; i++) {
-                        printf(" %d", data->path[i]);
-                    }
-                    printf(" ]\n");
-                    writecount++;
-                } else {
-                    wrote = write_to_file(file, data->source, data->max, data->size, data->path);
-                    if (wrote == 1) {
-                        printf("Error writing to file\n");
-                        error = true;
-                        pthread_exit(NULL);
-                    }
-                }
+                //     //Shows the graph computed data in the terminal
+                //     printf("Source node : %d\nDistances : [ ", data->source);
+                //     for (int i = 0; i < graph->file_infos->nb_nodes; i++) {
+                //         printf("%d ", data->ford->dist[i]);
+                //     }
+                //     printf("]\n    Destination : %u\n    Cost : %ld\n    Number of nodes : %d\n    Path : [", data->max->node, data->max->cost, data->size);
+                //     for (int i = 0; i < data->size; i++) {
+                //         printf(" %d", data->path[i]);
+                //     }
+                //     printf(" ]\n");
+                //     writecount++;
+                // } else {
+                //     wrote = write_to_file(file, data->source, data->max, data->size, data->path);
+                //     if (wrote == 1) {
+                //         printf("Error writing to file\n");
+                //         error = true;
+                //         pthread_exit(NULL);
+                //     }
+                // }
                 pthread_mutex_unlock(&write_mutex);
                 pthread_exit(NULL);
             }   
@@ -260,6 +261,10 @@ void *writethread(void *arg){
         while (writehead == writetail) {
             pthread_cond_wait(&write_not_empty, &write_mutex);
             if (write_done) {
+                if (writecount < graph->file_infos->nb_nodes){
+                    printf("Error: not all data was written to the file B\n");
+                    printf("differance between writecount and nb_nodes: %d\n", graph->file_infos->nb_nodes - writecount);
+                }
                 pthread_mutex_unlock(&write_mutex);
                 printf("Super exit\n");
                 pthread_exit(NULL);
