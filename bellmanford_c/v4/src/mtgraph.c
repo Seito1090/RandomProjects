@@ -68,7 +68,6 @@ void *readthread(void *arg) {
             pthread_cond_wait(&read_not_full, &read_mutex);
         }
         readbuffer[readhead] = src;
-        printf("put source %d in buffer\n", src);
         readhead = (readhead + 1) % BUFFERSIZE;
         pthread_cond_signal(&read_not_empty);
         pthread_mutex_unlock(&read_mutex);
@@ -140,6 +139,7 @@ void *computers(void *arg) {
         readtail = (readtail + 1) % BUFFERSIZE;
         pthread_cond_signal(&read_not_full);
         pthread_mutex_unlock(&read_mutex);
+        printf("took source %d\n", source);
 
         //Check if the graph is null, if it is, exit because cannot compute anything
         if (graph == NULL) {
@@ -156,7 +156,6 @@ void *computers(void *arg) {
         int32_t * path = (int32_t *)get_path(max->node, source, ford->path, &size);
         data->source = source; data->max = max; data->size = size; data->path = path;data->ford = ford;
         
-        printf("took source %d\n", source);
         //Writes the data structure in the writebuffer 
         //Waits if the writebuffer is full
         // pthread_mutex_lock(&read_mutex);
