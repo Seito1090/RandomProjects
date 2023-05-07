@@ -18,6 +18,7 @@ int writehead = 0;
 int writetail = 0;
 
 pthread_mutex_t write_mutex;
+pthread_mutex_t write_done_mutex;
 pthread_cond_t write_not_empty;
 pthread_cond_t write_not_full;
 
@@ -29,6 +30,7 @@ bool read_done = false;
 bool write_done = false;
 bool show = false;
 bool error;
+int writecount = 0;
 
 /*
 Function readthread 
@@ -67,7 +69,7 @@ void *readthread(void *arg) {
         }
         readbuffer[readhead] = src;
         readhead = (readhead + 1) % BUFFERSIZE;
-        pthread_cond_broadcast(&read_not_empty);
+        pthread_cond_signal(&read_not_empty);
         pthread_mutex_unlock(&read_mutex);
     }
     pthread_exit(NULL);
@@ -135,7 +137,7 @@ void *computers(void *arg) {
         }
         source = readbuffer[readtail];
         readtail = (readtail + 1) % BUFFERSIZE;
-        pthread_cond_broadcast(&read_not_full);
+        pthread_cond_signal(&read_not_full);
         pthread_mutex_unlock(&read_mutex);
 
         //Check if the graph is null, if it is, exit because cannot compute anything
@@ -153,29 +155,30 @@ void *computers(void *arg) {
         int32_t * path = (int32_t *)get_path(max->node, source, ford->path, &size);
         data->source = source; data->max = max; data->size = size; data->path = path;data->ford = ford;
         
-
+        printf("took source %d\n", source);
         //Writes the data structure in the writebuffer 
         //Waits if the writebuffer is full
+        // pthread_mutex_lock(&read_mutex);
+        // if (read_done && readhead == readtail) {
+        //     pthread_mutex_unlock(&read_mutex);
+        //     pthread_mutex_unlock(&write_mutex);  
+        //     free_ford_struct(ford); 
+        //     free_max_struct(max);
+        //     free_path(path);
+        //     free(data);
+        //     pthread_exit(NULL);
+        // }
+        // pthread_mutex_unlock(&read_mutex);
         pthread_mutex_lock(&write_mutex);
         while ((writehead + 1) % BUFFERSIZE == writetail) {
             pthread_cond_wait(&write_not_full, &write_mutex);
         }
         //Checks if the read thread is done, if it is, it frees the data and exits
         //This is to avoid a deadlock that occured occasionally and the last compute thread was stuck in the while loop 
-        pthread_mutex_lock(&read_mutex);
-        if (read_done && readhead == readtail) {
-            pthread_mutex_unlock(&read_mutex);
-            pthread_mutex_unlock(&write_mutex);  
-            free_ford_struct(ford); 
-            free_max_struct(max);
-            free_path(path);
-            free(data);
-            pthread_exit(NULL);
-        }
-        pthread_mutex_unlock(&read_mutex);
         writebuffer[writehead] = *data;
+        printf("source %d written to buffer at position %d\n", source, writehead);
         writehead = (writehead + 1) % BUFFERSIZE;
-        pthread_cond_broadcast(&write_not_empty);
+        pthread_cond_signal(&write_not_empty);
         pthread_mutex_unlock(&write_mutex);
 
         //Frees the data structure to avoid memory leak and a deadlock that occured occasionally    
@@ -219,19 +222,50 @@ void *writethread(void *arg){
         //Waits for the writebuffer to be accessible and reads the data structure
         pthread_mutex_lock(&write_mutex);
         if(write_done){
-            pthread_mutex_unlock(&write_mutex);
-            pthread_exit(NULL);
-        }
-        pthread_mutex_unlock(&write_mutex);
-        pthread_mutex_lock(&write_mutex);
+            if (writecount < graph->file_infos->nb_nodes){
+                printf("Error: not all data was written to the file A\n");
+                printf("writetail and writehead: %d %d\n", writetail, writehead);
+                thread_data_t * data1 = &writebuffer[writetail];
+                thread_data_t * data2 = &writebuffer[writehead];
+                thread_data_t * data3 = &writebuffer[(writehead + 1) % BUFFERSIZE];
+                thread_data_t * data4 = &writebuffer[(writehead + 2) % BUFFERSIZE];
+                thread_data_t * data5 = &writebuffer[(writehead + 3) % BUFFERSIZE];
+                printf("sources : \n data 1 : %d \n data 2 : %d \n data 3 : %d \n data 4 : %d \n data 5 : %d \n", data1->source, data2->source, data3->source, data4->source, data5->source);
+                data = &writebuffer[0];
+                if (show){
+
+                    //Shows the graph computed data in the terminal
+                    printf("Source node : %d\nDistances : [ ", data->source);
+                    for (int i = 0; i < graph->file_infos->nb_nodes; i++) {
+                        printf("%d ", data->ford->dist[i]);
+                    }
+                    printf("]\n    Destination : %u\n    Cost : %ld\n    Number of nodes : %d\n    Path : [", data->max->node, data->max->cost, data->size);
+                    for (int i = 0; i < data->size; i++) {
+                        printf(" %d", data->path[i]);
+                    }
+                    printf(" ]\n");
+                    writecount++;
+                } else {
+                    wrote = write_to_file(file, data->source, data->max, data->size, data->path);
+                    if (wrote == 1) {
+                        printf("Error writing to file\n");
+                        error = true;
+                        pthread_exit(NULL);
+                    }
+                }
+                pthread_mutex_unlock(&write_mutex);
+                pthread_exit(NULL);
+        }   }
         while (writehead == writetail) {
             pthread_cond_wait(&write_not_empty, &write_mutex);
             if (write_done) {
                 pthread_mutex_unlock(&write_mutex);
+                printf("Super exit\n");
                 pthread_exit(NULL);
             }
         }
         data = &writebuffer[writetail];
+        printf("came here and got sourece %d\n", data->source);
         writetail = (writetail + 1) % BUFFERSIZE;
         pthread_cond_signal(&write_not_full);
         pthread_mutex_unlock(&write_mutex);
@@ -257,6 +291,7 @@ void *writethread(void *arg){
                 printf(" %d", data->path[i]);
             }
             printf(" ]\n");
+            writecount++;
         } else {
 
             //Writes the graph computed data to the file (checks for first pass to write node info to the file)
@@ -275,6 +310,7 @@ void *writethread(void *arg){
                 error = true;
                 pthread_exit(NULL);
             }
+            writecount++;
         }
         free_ford_struct(data->ford);
         free_max_struct(data->max);
@@ -283,8 +319,9 @@ void *writethread(void *arg){
         //Checks if it has done everything, if it has, it frees the data and exits (in a mutex to avoid a race condition)
         pthread_mutex_lock(&write_mutex);
         if(write_done){
-            if (data->source >= graph->file_infos->nb_nodes - 1) {
+            if (write_done == graph->file_infos->nb_nodes) {
                 pthread_mutex_unlock(&write_mutex);
+                printf("emergencey exit \n");
                 pthread_exit(NULL);
             }
         }
@@ -333,6 +370,7 @@ int submain(sub_data_t *sub_data) {
     pthread_cond_init(&read_not_empty, NULL);
     pthread_cond_init(&read_not_full, NULL);
     pthread_mutex_init(&write_mutex, NULL);
+    pthread_mutex_init(&write_done_mutex, NULL);
     pthread_cond_init(&write_not_empty, NULL);
     pthread_cond_init(&write_not_full, NULL);
 
@@ -365,6 +403,7 @@ int submain(sub_data_t *sub_data) {
     pthread_cond_broadcast(&read_not_empty);
     pthread_mutex_unlock(&read_mutex);
 
+    // printf("writecount : %d \n", writecount);
     //wait for computer threads to finish and signal it to the write thread
     if (verbose){printf("Waiting for compute threads\n");}
     for (int thrd = 0; thrd < NTHREADS; thrd++) {
@@ -372,14 +411,15 @@ int submain(sub_data_t *sub_data) {
         if (verbose){printf("Done thread %d joined\n", thrd);}
     }
     if (verbose){printf("All compute threads joined\n");}
-
+    printf("hey:)\n");
     //Notifies the write thread that it is done and waits for it to finish
-    pthread_mutex_lock(&write_mutex);
+    pthread_mutex_lock(&write_done_mutex);
     write_done = true;
     pthread_cond_broadcast(&write_not_empty);
-    pthread_mutex_unlock(&write_mutex);
+    pthread_mutex_unlock(&write_done_mutex);
     if (verbose){printf("Waiting for write thread\n");}
 
+    printf("writecount : %d \n", writecount);
     //wait for write thread to finish
     pthread_join(writer, NULL);
     if (verbose){printf("Done last thread joined\n");}
