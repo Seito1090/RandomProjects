@@ -239,7 +239,7 @@ void *writethread(void *arg){
                     for (int i = 0; i < graph->file_infos->nb_nodes; i++) {
                         printf("%d ", data->ford->dist[i]);
                     }
-                    printf("]\n    Destination : %u\n    Cost : %ld\n    Number of nodes : %d\n    Path : [", data->max->node, data->max->cost, data->size);
+                    printf("]\n    Destination : %u\n    Cost : %lld\n    Number of nodes : %d\n    Path : [", data->max->node, data->max->cost, data->size);
                     for (int i = 0; i < data->size; i++) {
                         printf(" %d", data->path[i]);
                     }
