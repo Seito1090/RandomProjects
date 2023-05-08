@@ -11,10 +11,10 @@ for more information on the functions refer to the docstring in the mtgraph.c fi
 //Definition of the different structures used for the multithreading
 typedef struct thread_data{
     uint32_t source;
-    ford_t * ford;
     mcost_t * max;
     int32_t size;
     int32_t * path;
+    ford_t * ford;
 } thread_data_t;
 
 typedef struct sub_data{
@@ -42,6 +42,8 @@ Function : writethread
 Description : This function is used by a thread that writes the result in the file
 */
 void *writethread(void *arg);
+
+void recall(FILE * file);
 
 /*
 Function : submain

@@ -106,20 +106,20 @@ void *computers(void *arg) {
 
     while (true) {
 
-        pthread_mutex_lock(&compute_done_mutex);
-        pthread_mutex_lock(&read_done_mutex);
-        if (read_done){
-            if (writecount == graph->file_infos->nb_nodes) {
-                printf("computecount = %d\n", computecount);
-                pthread_mutex_unlock(&read_done_mutex);
-                pthread_mutex_unlock(&compute_done_mutex);
-                free(data);
-                printf("terminated a compute thread\n");
-                pthread_exit(NULL);
-            }
-        }
-        pthread_mutex_unlock(&read_done_mutex);
-        pthread_mutex_unlock(&compute_done_mutex);
+        // pthread_mutex_lock(&compute_done_mutex);
+        // pthread_mutex_lock(&read_done_mutex);
+        // if (read_done){
+        //     if (writecount == graph->file_infos->nb_nodes) {
+        //         printf("computecount = %d\n", computecount);
+        //         pthread_mutex_unlock(&read_done_mutex);
+        //         pthread_mutex_unlock(&compute_done_mutex);
+        //         free(data);
+        //         printf("terminated a compute thread\n");
+        //         pthread_exit(NULL);
+        //     }
+        // }
+        // pthread_mutex_unlock(&read_done_mutex);
+        // pthread_mutex_unlock(&compute_done_mutex);
         sem_wait(&compute_sem);
 
         sem_wait(&read_done_sem); // wait for write to buffer to be done
@@ -147,13 +147,13 @@ void *computers(void *arg) {
             sem_post(&write_sem);
             sem_post(&compute_done_sem);
         }
-        printf("waiting here\n");
+        // printf("waiting here\n");
         pthread_mutex_lock(&compute_done_mutex);
         computecount++;
-        printf("computecount = %d\n", computecount);
+        // printf("computecount = %d\n", computecount);
         if (writecount == graph->file_infos->nb_nodes){
             pthread_mutex_unlock(&compute_done_mutex);
-            printf("terminated a compute thread normally\n");
+            // printf("terminated a compute thread normally\n");
             break;
         }
         pthread_mutex_unlock(&compute_done_mutex);
@@ -180,8 +180,9 @@ None, it writes the data to the file
 */
 void *writethread(void *arg){
     thread_data_t *data; 
-    // bool first_pass = true; int wrote; 
-
+    bool first_pass = true; 
+    int wrote; 
+    FILE * file = (FILE *)arg;
     while (true){
         sem_wait(&write_sem);
 
@@ -191,8 +192,41 @@ void *writethread(void *arg){
         writetail = (writetail + 1) % BUFFERSIZE;
 
         sem_post(&write_sem);
+        if (show){
 
-        printf("took source %d from write buffer\n", data->source);
+            printf("Source node : %d\nDistances : [ ", data->source);
+                for (int i = 0; i < graph->file_infos->nb_nodes; i++) {
+                    printf("%d ", data->ford->dist[i]);
+            }
+                printf("]\n    Destination : %u\n    Cost : %ld\n    Number of nodes : %d\n    Path : [", data->max->node, data->max->cost, data->size);
+                for (int i = 0; i < data->size; i++) {
+                    printf(" %d", data->path[i]);
+            }
+            printf(" ]\n");
+        } else {
+            printf("came here with source = %d\n", data->source);
+            if (first_pass){
+                printf("wrote first pass\n");
+                uint32_t nb_nodes_be = htonl(graph->file_infos->nb_nodes);
+                if (fwrite(&nb_nodes_be, sizeof(uint32_t), 1, file) != 1) {
+                    printf("Error: Failed to write source node.\n");
+                    error = true;
+                    pthread_exit(NULL);
+                }
+                first_pass = false;
+
+            }
+            wrote = write_to_file(file, data->source, data->max, data->size, data->path);
+            if (wrote == 1) {
+                printf("Error writing to file\n");
+                error = true;
+                pthread_exit(NULL);
+            }
+            printf("managed to write to file\n");
+        }
+        // free_ford_struct(data->ford);
+        // free_max_struct(data->max);
+        // free_path(data->path);
         pthread_mutex_lock(&compute_done_mutex);
         writecount++;
         if (writecount == graph->file_infos->nb_nodes){
@@ -207,72 +241,6 @@ void *writethread(void *arg){
     // //Initialization of the variables used in the function and getting the file from the arguments
     // FILE *file = (FILE*)arg;
     
-    // //While the compute threads are not done, it writes the data structure in the writebuffer to the file
-    // while (true) {
-
-    //     //Waits for the writebuffer to be accessible and reads the data structure
-    //     pthread_mutex_lock(&write_mutex);
-    //     if(write_done){
-    //         if (writecount < graph->file_infos->nb_nodes){
-    //             printf("Error: not all data was written to the file A\n");
-    //             // printf("writetail and writehead: %d %d\n", writetail, writehead);
-    //             // thread_data_t * data1 = &writebuffer[writetail];
-    //             // thread_data_t * data2 = &writebuffer[writehead];
-    //             // thread_data_t * data3 = &writebuffer[(writehead + 1) % BUFFERSIZE];
-    //             // thread_data_t * data4 = &writebuffer[(writehead + 2) % BUFFERSIZE];
-    //             // thread_data_t * data5 = &writebuffer[(writehead + 3) % BUFFERSIZE];
-    //             // printf("sources : \n data 1 : %d \n data 2 : %d \n data 3 : %d \n data 4 : %d \n data 5 : %d \n", data1->source, data2->source, data3->source, data4->source, data5->source);
-    //             // data = &writebuffer[0];
-    //             // if (show){
-
-    //             //     //Shows the graph computed data in the terminal
-    //             //     printf("Source node : %d\nDistances : [ ", data->source);
-    //             //     for (int i = 0; i < graph->file_infos->nb_nodes; i++) {
-    //             //         printf("%d ", data->ford->dist[i]);
-    //             //     }
-    //             //     printf("]\n    Destination : %u\n    Cost : %ld\n    Number of nodes : %d\n    Path : [", data->max->node, data->max->cost, data->size);
-    //             //     for (int i = 0; i < data->size; i++) {
-    //             //         printf(" %d", data->path[i]);
-    //             //     }
-    //             //     printf(" ]\n");
-    //             //     writecount++;
-    //             // } else {
-    //             //     wrote = write_to_file(file, data->source, data->max, data->size, data->path);
-    //             //     if (wrote == 1) {
-    //             //         printf("Error writing to file\n");
-    //             //         error = true;
-    //             //         pthread_exit(NULL);
-    //             //     }
-    //             // }
-    //             pthread_mutex_unlock(&write_mutex);
-    //             pthread_exit(NULL);
-    //         }   
-    //     }
-    //     while (writehead == writetail) {
-    //         pthread_cond_wait(&write_not_empty, &write_mutex);
-    //         if (write_done) {
-    //             if (writecount < graph->file_infos->nb_nodes){
-    //                 printf("Error: not all data was written to the file B\n");
-    //                 printf("writetail and writehead: %d %d\n", writetail, writehead);
-    //             }
-    //             pthread_mutex_unlock(&write_mutex);
-    //             printf("Super exit\n");
-    //             pthread_exit(NULL);
-    //         }
-    //     }
-    //     data = &writebuffer[writetail];
-    //     printf("came here and got sourece %d\n", data->source);
-    //     writetail = (writetail + 1) % BUFFERSIZE;
-    //     pthread_cond_signal(&write_not_full);
-    //     pthread_mutex_unlock(&write_mutex);
-
-
-    //     //Checks if the data is null, if it is, exits because cannot write anything/ there was a bug
-    //     if (data == NULL) {
-    //         printf("Error: data is null\n");
-    //         error = true;
-    //         pthread_exit(NULL);
-    //     }
 
     //     //Checks if it has to show or save the output, does accordingly
     //     if (show){
