@@ -155,6 +155,6 @@ def readgraph(file):
             # Print the integer value
             print(value1)
 
-# read_binary_file("bellmanford_c/v3/tests/output_tests/default_c.bin","bellmanford_c/v3/test.bin")
+read_binary_file("bellmanford_c/v3/tests/output_tests/default_c.bin","bellmanford_c/v5/myOutput.bin")
 # print(files_are_equal("bellmanford_c/v3/tests/output_tests/default_c.bin","bellmanford_c/v3/test.bin"))
-readgraph("bellmanford_c/v3/tests/graph_bin/default.bin")
+# readgraph("bellmanford_c/v5/myOutput.bin")

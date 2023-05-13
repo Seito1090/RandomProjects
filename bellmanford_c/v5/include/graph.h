@@ -8,7 +8,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include "../include/portable_endian.h"
-// #include "../include/portable_semaphore.h"
+#include "../include/portable_semaphore.h"
 #include <arpa/inet.h>
 
 //Definition of the different structures used in the program
