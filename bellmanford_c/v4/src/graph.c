@@ -199,7 +199,7 @@ ford_t* bellman_ford(uint32_t nb_nodes, uint32_t nb_edges, branch_t * links, uin
             if (verbose){
                 printf("Negative cycle detected");
             }
-            // Reset distancesances and pathss only for nodes that are reachable from nodes involved in negative cycle
+            // Reset distancesances and paths only for nodes that are reachable from nodes involved in negative cycle
             int start_node = node_to;
             while (start_node != node_from) {
                 distances[start_node] = INT32_MAX;
