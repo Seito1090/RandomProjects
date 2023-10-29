@@ -84,7 +84,7 @@ void print_test(){
 
     printf("Last address : %p\n", (void*)&MY_HEAP[64000]);
     int count = 0;
-    while(current_header_address <= &MY_HEAP[64000] && count < 5){
+    while(current_header_address <= &MY_HEAP[64000] ){
         count++;
         //Check the last bit to know if the bloc is free or not
         printf("Current header address : %p\n", (void*)current_header_address);
@@ -192,9 +192,7 @@ void my_free(void* pointer){
         return;
     } else { //Pointer is correct
         //Set the last bit to 0 to indicate that the bloc is free
-        printf("Header value before : %d\n", header);
         header = header & ~0x1;
-        printf("Header value after : %d\n", header);
 
         //Split the header into 2 uint8_t
         uint8_t first_part = header >> 8;
@@ -243,7 +241,7 @@ void my_free(void* pointer){
  *
  * */
 void *my_malloc(size_t size){
-    //TODO : fusing free cells that might have been missed by the free function + add a way to check if the bloc is the big boi or not, it causes issues when allocating in a small one
+    //TODO : fusing free cells that might have been missed by the free function
     //Change size to fit our design, like adding place for header (2 bytes) and adding a byte if the size wanted is odd.
     if (size % 2 != 0){size++;}
     size += 2;
@@ -263,7 +261,7 @@ void *my_malloc(size_t size){
     //TODO : add the logic that allows to get the best out of 3 fits
     //1st take the first available header
     uint16_t current_header_value;
-
+    int big = 0;
     //2nd loop on the boxes available and check if we can put it in
     //Need to loop on the memory spaces, from header to header (header + size of the bloc), if the last bit is 1, continue, else check if the size is enough, if it not continues
     //Max size loop = sizeof(MY_HEAP)
@@ -281,7 +279,8 @@ void *my_malloc(size_t size){
             displacement += (current_header_value & ~0x1);
             current_header_value = MY_HEAP[displacement] << 8 | MY_HEAP[displacement+1];
 
-        } else if ((current_header_value & 0x1) == 0){ //Free, potentially usable
+        }
+        if ((current_header_value & 0x1) == 0){ //Free, potentially usable
             printf("Free to use\n");
             if (current_header_value >= allocated_size){
                 printf("entered here\n");
@@ -289,6 +288,8 @@ void *my_malloc(size_t size){
                 //Check if we are in the biggest bloc or not
                 if (current_header_value != max_box){ //It is free so the value stored should be comparable without issues
                     max_box = current_header_value;
+                } else {
+                    big = 1;
                 }
 
                 //Check if the size wanted won't leave some unusable space if done normally
@@ -330,7 +331,6 @@ void *my_malloc(size_t size){
                 //Get the pointer to the place where data can be written to
                 void *pointer = (void *) (&MY_HEAP[0]) + displacement + 2;
                 printf("Pointer returned : %p\n", pointer);
-                //--------------------------------------------------------------Down to here it's ok-------------------------------------------------------
                 //Get to the next header address
                 displacement += allocated_size;
 
@@ -339,21 +339,27 @@ void *my_malloc(size_t size){
                 uint16_t next_header_value = MY_HEAP[displacement] << 8 | MY_HEAP[displacement+1];
                 printf("Next header value : %d\n", next_header_value);
                 printf("Next header address : %p & %p\n", (void*)&MY_HEAP[displacement], (void*)&MY_HEAP[displacement+1]);
+
                 if ((next_header_value & 0x1) == 1){
                     //if the next section is allocated, we can't change its value
                     return pointer;
                 }
-                //Get the number of space left //TODO : the issue comes from here probably, need to check if the bloc that has just been allocated was a part of the big one or not
 
-                max_box -= allocated_size;
+                //If we reallocate the whole free bloc, we don't have to change the header value, otherwise we have to
+                if (max_box != allocated_size){
+                    max_box -= allocated_size;
 
-                //Set the value in the new header
-                MY_HEAP[displacement] = max_box >> 8;
-                MY_HEAP[displacement+1] = max_box & 0xFF;
-
-                //Update the largest bloc available
-                MY_HEAP[0] = max_box >> 8;
-                MY_HEAP[1] = max_box & 0xFF;
+                    //Set the value in the new header
+                    MY_HEAP[displacement] = max_box >> 8;
+                    MY_HEAP[displacement+1] = max_box & 0xFF;
+                }
+                if (big == 1){
+                    //DO ONLY WHEN BIG BOI INVOLVED
+                    //Update the largest bloc available
+                    MY_HEAP[0] = max_box >> 8;
+                    MY_HEAP[1] = max_box & 0xFF;
+                    big = 0;
+                }
 
                 printf("Number of mallocs done : %d\n", mallocs_done);
                 printf("Value stored : %d\n", MY_HEAP[displacement] << 8 | MY_HEAP[displacement+1]);
@@ -361,10 +367,31 @@ void *my_malloc(size_t size){
                 printf("Next header address : %p\n", (void*)&MY_HEAP[displacement - 2]);
                 printf("--------------------------------\n");
                 return pointer;
+            } else {
+                //If we are here, it means that the size wasn't enough, so we have to go to the next header BUT it was a free segment, so we potentially have to fuse it with the next one
+
+                //Check if the next segment is free or not
+                uint16_t next_header_position = displacement;
+                next_header_position += current_header_value & ~0x1;
+                uint16_t next_header_value = MY_HEAP[next_header_position] << 8 | MY_HEAP[next_header_position+1];
+                /*if ((next_header_value & 0x1) == 0){
+                    //It is indeed free, so we have to fuse them,
+
+                    //Update the current header value
+                    current_header_value += next_header_value;
+
+                    //Update the header value in the heap
+                    MY_HEAP[displacement] = current_header_value >> 8;
+                    MY_HEAP[displacement+1] = current_header_value & 0xFF;
+
+                    //Update the fused header to not be one anymore in the heap
+                    MY_HEAP[next_header_position] = 0;
+                    MY_HEAP[next_header_position+1] = 0;
+                }*/
+
+                displacement += (current_header_value & ~0x1);
+                current_header_value = MY_HEAP[displacement] << 8 | MY_HEAP[displacement+1];
             }
-        } else {
-            displacement += (current_header_value & ~0x1);
-            current_header_value = MY_HEAP[displacement] << 8 | MY_HEAP[displacement+1];
         }
     }
     return NULL;
@@ -378,19 +405,20 @@ int main() {
     uint16_t *mem0 = (uint16_t*) my_malloc(sizeAllocated);
     uint16_t *mem1 = (uint16_t*) my_malloc(sizeAllocated +2);
     uint16_t *mem2 = (uint16_t*) my_malloc(sizeAllocated + 256);
-    //uint16_t *mem4 = (uint16_t*) my_malloc(20000);
+    uint16_t *mem3 = (uint16_t*) my_malloc(20000);
 
     printf("Free 0 ---------------------------------------\n");
     my_free(mem0);
     printf("Free 1 ---------------------------------------\n");
-    my_free(mem1);
+    //my_free(mem1);
     printf("Free 2 ---------------------------------------\n");
+    my_free(mem2);
     printf("Free 3 ---------------------------------------\n");
-    //my_free(mem3);
+    my_free(mem3);
+    uint16_t *mem4 = (uint16_t*) my_malloc(sizeAllocated-2); //TODO : issue when trying to reallocate a memory space that was freed before ! aka allocate memory not from the big boi bloc
     printf("Free 4 ---------------------------------------\n");
     //my_free(mem4);
     printf("Malloc ---------------------------------------\n");
-    //uint16_t *mem3 = (uint16_t*) my_malloc(sizeAllocated+2); //TODO : issue when trying to reallocate a memory space that was freed before ! aka allocate memory not from the big boi bloc
 
     //printf("address returned : %p\n", (void*)mem4);
     //printf("address returned : %p\n", (void*)mem3);
@@ -402,10 +430,14 @@ int main() {
     uint16_t *mem5 = (uint16_t*) my_malloc(sizeAllocated -2);
     //printf("address returned : %p\n", (void*)mem5);
     //Show mallocs done
-    printf("---------------------------------------\nNumber of mallocs done : %d\n", MY_HEAP[2] << 8 | MY_HEAP[3]);
-    //print_heap_status();
+    my_free(mem5);
+    printf("Malloc ---------------------------------------\n");
+    uint16_t *mem6 = (uint16_t*) my_malloc(sizeAllocated  + 150);
+    printf("---------------------------------------\nNumber of mallocs done : %d\n----------------------------------\n", MY_HEAP[2] << 8 | MY_HEAP[3]);
     print_test();
-    printf("address returned : %p\n", (void*)mem0);
+    print_heap_status();
+    printf("last address : %p\n", (void*)&MY_HEAP[64000]);
+
     //printf("address returned : %p\n", (void*)mem1);
     //printf("address returned : %p\n", (void*)mem2);
     //printf("address returned : %p\n", (void*)mem5);
